@@ -23,7 +23,7 @@ export default function PoolGame() {
   const [selectedSpeed, setSelectedSpeed] = useState(50);
   const [balls, setBalls] = useState<Ball[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number | undefined>();
+  const animationRef = useRef<number | undefined>(undefined);
 
   // Initialize balls in standard 8-ball formation
   useEffect(() => {
