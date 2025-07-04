@@ -276,16 +276,39 @@ export default function PoolGame() {
     // Clear canvas
     ctx.clearRect(0, 0, 800, 400);
     
-    // Draw table (green felt)
-    ctx.fillStyle = '#0d5016';
+    // Draw table background with gradient
+    const tableGradient = ctx.createLinearGradient(0, 0, 0, 400);
+    tableGradient.addColorStop(0, '#0f6018');
+    tableGradient.addColorStop(0.5, '#0d5016');
+    tableGradient.addColorStop(1, '#0b4013');
+    ctx.fillStyle = tableGradient;
     ctx.fillRect(0, 0, 800, 400);
     
-    // Draw table border
-    ctx.strokeStyle = '#8B4513';
+    // Add subtle texture pattern
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+    for (let i = 0; i < 800; i += 4) {
+      for (let j = 0; j < 400; j += 4) {
+        if ((i + j) % 8 === 0) {
+          ctx.fillRect(i, j, 2, 2);
+        }
+      }
+    }
+    
+    // Draw table border with wood texture
+    const woodGradient = ctx.createLinearGradient(0, 0, 800, 0);
+    woodGradient.addColorStop(0, '#654321');
+    woodGradient.addColorStop(0.5, '#8B4513');
+    woodGradient.addColorStop(1, '#654321');
+    ctx.strokeStyle = woodGradient;
     ctx.lineWidth = 20;
     ctx.strokeRect(10, 10, 780, 380);
     
-    // Draw pockets
+    // Inner border highlight
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(20, 20, 760, 360);
+    
+    // Draw pockets with depth effect
     const pocketPositions = [
       { x: 30, y: 30 },
       { x: 400, y: 20 },
@@ -295,8 +318,23 @@ export default function PoolGame() {
       { x: 770, y: 370 }
     ];
     
-    ctx.fillStyle = '#000000';
     pocketPositions.forEach(pos => {
+      // Outer ring (metal/leather)
+      const pocketGradient = ctx.createRadialGradient(pos.x, pos.y, 15, pos.x, pos.y, 25);
+      pocketGradient.addColorStop(0, '#000000');
+      pocketGradient.addColorStop(0.7, '#1a1a1a');
+      pocketGradient.addColorStop(1, '#333333');
+      ctx.fillStyle = pocketGradient;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, 25, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Inner pocket (black hole effect)
+      const innerGradient = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 20);
+      innerGradient.addColorStop(0, '#000000');
+      innerGradient.addColorStop(0.8, '#000000');
+      innerGradient.addColorStop(1, 'rgba(0, 0, 0, 0.8)');
+      ctx.fillStyle = innerGradient;
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, 20, 0, Math.PI * 2);
       ctx.fill();
@@ -309,27 +347,91 @@ export default function PoolGame() {
       
       const displayRadius = 12 * ball.scale;
       
-      // Ball shadow
-      ctx.fillStyle = `rgba(0, 0, 0, ${0.3 * ball.scale})`;
+      // Ball shadow (more realistic)
+      const shadowGradient = ctx.createRadialGradient(
+        ball.x + 3, ball.y + 3, 0,
+        ball.x + 3, ball.y + 3, displayRadius + 4
+      );
+      shadowGradient.addColorStop(0, `rgba(0, 0, 0, ${0.4 * ball.scale})`);
+      shadowGradient.addColorStop(0.8, `rgba(0, 0, 0, ${0.2 * ball.scale})`);
+      shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = shadowGradient;
       ctx.beginPath();
-      ctx.arc(ball.x + 2, ball.y + 2, displayRadius, 0, Math.PI * 2);
+      ctx.arc(ball.x + 3, ball.y + 3, displayRadius + 4, 0, Math.PI * 2);
       ctx.fill();
       
-      // Ball
-      ctx.fillStyle = ball.color;
+      // Ball with gradient
+      const ballGradient = ctx.createRadialGradient(
+        ball.x - displayRadius * 0.3, ball.y - displayRadius * 0.3, 0,
+        ball.x, ball.y, displayRadius
+      );
+      
+      // Special gradient for cue ball
+      if (ball.number === 0) {
+        ballGradient.addColorStop(0, '#ffffff');
+        ballGradient.addColorStop(0.7, '#f0f0f0');
+        ballGradient.addColorStop(1, '#d0d0d0');
+      } else if (ball.number === 8) {
+        ballGradient.addColorStop(0, '#333333');
+        ballGradient.addColorStop(0.7, '#000000');
+        ballGradient.addColorStop(1, '#000000');
+      } else {
+        // Adjust color brightness for gradient
+        const baseColor = ball.color;
+        ballGradient.addColorStop(0, ball.color);
+        ballGradient.addColorStop(0.7, ball.color);
+        ballGradient.addColorStop(1, ball.color);
+      }
+      
+      ctx.fillStyle = ballGradient;
       ctx.beginPath();
       ctx.arc(ball.x, ball.y, displayRadius, 0, Math.PI * 2);
       ctx.fill();
       
-      // Ball border
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 1;
+      // Stripe for balls 9-15
+      if (ball.number > 8 && ball.number <= 15) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, displayRadius, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.fillStyle = 'white';
+        ctx.fillRect(ball.x - displayRadius, ball.y - displayRadius * 0.5, displayRadius * 2, displayRadius);
+        ctx.restore();
+      }
+      
+      // Ball reflection (glass effect)
+      const reflectionGradient = ctx.createRadialGradient(
+        ball.x - displayRadius * 0.3, ball.y - displayRadius * 0.3, 0,
+        ball.x - displayRadius * 0.3, ball.y - displayRadius * 0.3, displayRadius * 0.7
+      );
+      reflectionGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+      reflectionGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.3)');
+      reflectionGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      
+      ctx.fillStyle = reflectionGradient;
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, displayRadius, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Ball border (subtle)
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, displayRadius, 0, Math.PI * 2);
       ctx.stroke();
       
       // Number on ball (except cue ball)
       if (ball.number > 0 && ball.scale > 0.3) {
-        ctx.fillStyle = ball.number > 8 ? '#FFFFFF' : '#000000';
-        ctx.font = `bold ${10 * ball.scale}px Arial`;
+        // White circle background for number
+        if (ball.number <= 8 || ball.number > 15) {
+          ctx.fillStyle = 'white';
+          ctx.beginPath();
+          ctx.arc(ball.x, ball.y, displayRadius * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        ctx.fillStyle = ball.number > 8 ? '#000000' : '#000000';
+        ctx.font = `bold ${8 * ball.scale}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(ball.number.toString(), ball.x, ball.y);
@@ -340,21 +442,56 @@ export default function PoolGame() {
     if (gameScreen === 'angle') {
       const cueBall = balls.find(b => b.id === 0);
       if (cueBall) {
-        ctx.strokeStyle = '#8B4513';
-        ctx.lineWidth = 8;
-        ctx.beginPath();
         const cueLength = 150;
         const cueOffset = 30;
         const startX = cueBall.x - Math.cos(selectedAngle) * cueOffset;
         const startY = cueBall.y - Math.sin(selectedAngle) * cueOffset;
         const endX = startX - Math.cos(selectedAngle) * cueLength;
         const endY = startY - Math.sin(selectedAngle) * cueLength;
+        
+        // Cue stick gradient
+        const cueGradient = ctx.createLinearGradient(startX, startY, endX, endY);
+        cueGradient.addColorStop(0, '#D2691E');
+        cueGradient.addColorStop(0.3, '#8B4513');
+        cueGradient.addColorStop(0.7, '#654321');
+        cueGradient.addColorStop(1, '#3E2723');
+        
+        // Draw cue stick with taper
+        ctx.save();
+        ctx.strokeStyle = cueGradient;
+        ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
         ctx.moveTo(startX, startY);
         ctx.lineTo(endX, endY);
         ctx.stroke();
         
-        // Aiming line
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        // Cue tip (white)
+        ctx.fillStyle = '#F5F5DC';
+        ctx.beginPath();
+        ctx.arc(startX, startY, 5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Ferrule (metallic band)
+        ctx.strokeStyle = '#C0C0C0';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        const ferruleX = startX - Math.cos(selectedAngle) * 10;
+        const ferruleY = startY - Math.sin(selectedAngle) * 10;
+        ctx.arc(ferruleX, ferruleY, 4, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        
+        // Aiming line with gradient
+        const aimGradient = ctx.createLinearGradient(
+          cueBall.x, cueBall.y,
+          cueBall.x + Math.cos(selectedAngle) * 200, 
+          cueBall.y + Math.sin(selectedAngle) * 200
+        );
+        aimGradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+        aimGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        
+        ctx.strokeStyle = aimGradient;
         ctx.lineWidth = 2;
         ctx.setLineDash([5, 5]);
         ctx.beginPath();
