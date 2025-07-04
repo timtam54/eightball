@@ -1,0 +1,64 @@
+/* Custom styles for the pool game slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Track */
+input[type="range"]::-webkit-slider-track {
+  background: #374151;
+  height: 12px;
+  border-radius: 6px;
+}
+
+input[type="range"]::-moz-range-track {
+  background: #374151;
+  height: 12px;
+  border-radius: 6px;
+}
+
+/* Thumb */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #10b981;
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  margin-top: -6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  transition: background 0.2s;
+}
+
+input[type="range"]::-moz-range-thumb {
+  border: none;
+  background: #10b981;
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  transition: background 0.2s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: #059669;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  background: #059669;
+}
+
+/* Focus */
+input[type="range"]:focus {
+  outline: none;
+}
+
+input[type="range"]:focus::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+}
+
+input[type="range"]:focus::-moz-range-thumb {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+}
