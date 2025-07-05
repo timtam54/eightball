@@ -33,19 +33,57 @@ export default function PoolGameComponent() {
   const [balls, setBalls] = useState<Ball[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
+  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 400 });
+  const [scale, setScale] = useState(1);
+  
+  // Constants for the original game size
+  const ORIGINAL_WIDTH = 800;
+  const ORIGINAL_HEIGHT = 400;
+  
+  // Calculate responsive canvas size
+  useEffect(() => {
+    const handleResize = () => {
+      const container = document.getElementById('game-container');
+      if (!container) return;
+      
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+      
+      // Calculate scale to fit the container while maintaining aspect ratio
+      const scaleX = containerWidth / ORIGINAL_WIDTH;
+      const scaleY = containerHeight / ORIGINAL_HEIGHT;
+      const newScale = Math.min(scaleX, scaleY, 1); // Don't scale up beyond original size
+      
+      setScale(newScale);
+      setCanvasSize({
+        width: ORIGINAL_WIDTH * newScale,
+        height: ORIGINAL_HEIGHT * newScale
+      });
+    };
+    
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    
+    // Force landscape on mobile
+    if (window.innerWidth < 768 && window.innerHeight > window.innerWidth) {
+      alert('Please rotate your device to landscape mode for the best experience');
+    }
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Initialize balls in standard 8-ball formation
   useEffect(() => {
-    const railWidth = 40;
-    const ballRadius = 12;
+    const railWidth = 40 * scale;
+    const ballRadius = 12 * scale;
     const spacing = ballRadius * 2.2;
     // Ensure all balls start within the play area
-    const startX = 500;
-    const startY = 200; // Center of table
+    const startX = 500 * scale;
+    const startY = 200 * scale; // Center of table
     
     const initialBalls: Ball[] = [
       // Cue ball - ensure it's well within the play area
-      { id: 0, x: 200, y: 200, vx: 0, vy: 0, color: 'white', number: 0, isPocketed: false, scale: 1 },
+      { id: 0, x: 200 * scale, y: 200 * scale, vx: 0, vy: 0, color: 'white', number: 0, isPocketed: false, scale: 1 },
       
       // Row 1 (1 ball)
       { id: 1, x: startX, y: startY, vx: 0, vy: 0, color: '#FFD700', number: 1, isPocketed: false, scale: 1 },
@@ -74,18 +112,25 @@ export default function PoolGameComponent() {
     ];
     
     setBalls(initialBalls);
-  }, []);
+  }, [scale]);
 
-  // Handle mouse movement for angle selection
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Handle mouse/touch movement for angle selection
+  const handlePointerMove = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (gameScreen !== 'angle') return;
     
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    let x, y;
+    
+    if ('touches' in e) {
+      x = e.touches[0].clientX - rect.left;
+      y = e.touches[0].clientY - rect.top;
+    } else {
+      x = e.clientX - rect.left;
+      y = e.clientY - rect.top;
+    }
     
     const cueBall = balls.find(b => b.id === 0);
     if (!cueBall) return;
@@ -106,7 +151,7 @@ export default function PoolGameComponent() {
     const cueBall = balls.find(b => b.id === 0);
     if (!cueBall) return;
     
-    const speed = (selectedSpeed / 100) * 50; // Scale speed - max speed is now 50 pixels per frame
+    const speed = (selectedSpeed / 100) * 50 * scale; // Scale speed based on canvas size
     const newBalls = balls.map(ball => {
       if (ball.id === 0) {
         return {
@@ -130,11 +175,11 @@ export default function PoolGameComponent() {
       setBalls(prevBalls => {
         const newBalls = [...prevBalls];
         const friction = 0.995; // Reduced friction for more momentum
-        const ballRadius = 12;
-        const pocketRadius = 20;
-        const tableWidth = 800;
-        const tableHeight = 400; // Shorter table
-        const railWidth = 40; // Define railWidth here for the physics loop
+        const ballRadius = 12 * scale;
+        const pocketRadius = 20 * scale;
+        const tableWidth = ORIGINAL_WIDTH * scale;
+        const tableHeight = ORIGINAL_HEIGHT * scale;
+        const railWidth = 40 * scale; // Define railWidth here for the physics loop
         
         const currentTime = Date.now();
         
@@ -288,7 +333,7 @@ export default function PoolGameComponent() {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [gameScreen]);
+  }, [gameScreen, scale, ORIGINAL_WIDTH, ORIGINAL_HEIGHT]);
 
   // Draw the game
   useEffect(() => {
@@ -299,13 +344,13 @@ export default function PoolGameComponent() {
     if (!ctx) return;
     
     // Clear canvas
-    ctx.clearRect(0, 0, 800, 400);
+    ctx.clearRect(0, 0, canvasSize.width, canvasSize.height);
     
     // Draw outer wood frame first (rails/cushions)
-    const railWidth = 40;
+    const railWidth = 40 * scale;
     
     // Wood frame with realistic texture
-    const woodPattern = ctx.createLinearGradient(0, 0, 800, 400);
+    const woodPattern = ctx.createLinearGradient(0, 0, canvasSize.width, canvasSize.height);
     woodPattern.addColorStop(0, '#3E2723');
     woodPattern.addColorStop(0.2, '#5D4037');
     woodPattern.addColorStop(0.4, '#4E342E');
@@ -315,23 +360,23 @@ export default function PoolGameComponent() {
     
     // Draw outer frame
     ctx.fillStyle = woodPattern;
-    ctx.fillRect(0, 0, 800, 400);
+    ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
     
     // Add wood grain texture
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
     ctx.lineWidth = 1;
-    for (let i = 0; i < 800; i += 8) {
+    for (let i = 0; i < canvasSize.width; i += 8) {
       ctx.beginPath();
       ctx.moveTo(i + Math.sin(i * 0.02) * 2, 0);
-      ctx.lineTo(i + Math.sin(i * 0.02 + 0.5) * 2, 400);
+      ctx.lineTo(i + Math.sin(i * 0.02 + 0.5) * 2, canvasSize.height);
       ctx.stroke();
     }
     
     // Draw inner playing area (green felt)
     const playAreaX = railWidth;
     const playAreaY = railWidth;
-    const playAreaWidth = 800 - (railWidth * 2);
-    const playAreaHeight = 400 - (railWidth * 2);
+    const playAreaWidth = canvasSize.width - (railWidth * 2);
+    const playAreaHeight = canvasSize.height - (railWidth * 2);
     
     // Table felt with better gradient
     const tableGradient = ctx.createRadialGradient(400, 200, 100, 400, 200, 400);
@@ -408,25 +453,25 @@ export default function PoolGameComponent() {
       netGradient.addColorStop(1, '#3d2418');
       ctx.fillStyle = netGradient;
       ctx.beginPath();
-      ctx.arc(pos.x, pos.y, 28, 0, Math.PI * 2);
+      ctx.arc(pos.x, pos.y, 28 * scale, 0, Math.PI * 2);
       ctx.fill();
       
       // Inner pocket depth
-      const depthGradient = ctx.createRadialGradient(pos.x - 3, pos.y - 3, 0, pos.x, pos.y, 22);
+      const depthGradient = ctx.createRadialGradient(pos.x - 3 * scale, pos.y - 3 * scale, 0, pos.x, pos.y, 22 * scale);
       depthGradient.addColorStop(0, '#000000');
       depthGradient.addColorStop(0.5, '#000000');
       depthGradient.addColorStop(0.8, '#0a0503');
       depthGradient.addColorStop(1, '#1a0a05');
       ctx.fillStyle = depthGradient;
       ctx.beginPath();
-      ctx.arc(pos.x, pos.y, 22, 0, Math.PI * 2);
+      ctx.arc(pos.x, pos.y, 22 * scale, 0, Math.PI * 2);
       ctx.fill();
       
       // Pocket rim highlight
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(pos.x, pos.y, 27, -Math.PI/4, Math.PI/4);
+      ctx.arc(pos.x, pos.y, 27 * scale, -Math.PI/4, Math.PI/4);
       ctx.stroke();
     });
     
@@ -547,7 +592,7 @@ export default function PoolGameComponent() {
         }
         
         ctx.fillStyle = ball.number > 8 ? '#000000' : '#000000';
-        ctx.font = `bold ${8 * ball.scale}px Arial`;
+        ctx.font = `bold ${8 * scale * ball.scale}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(ball.number.toString(), ball.x, ball.y);
@@ -558,8 +603,8 @@ export default function PoolGameComponent() {
     if (gameScreen === 'angle') {
       const cueBall = balls.find(b => b.id === 0);
       if (cueBall) {
-        const cueLength = 180;
-        const cueOffset = 35;
+        const cueLength = 180 * scale;
+        const cueOffset = 35 * scale;
         const startX = cueBall.x - Math.cos(selectedAngle) * cueOffset;
         const startY = cueBall.y - Math.sin(selectedAngle) * cueOffset;
         const endX = startX - Math.cos(selectedAngle) * cueLength;
@@ -586,7 +631,7 @@ export default function PoolGameComponent() {
         taper.addColorStop(1, '#4A2C17');
         
         ctx.strokeStyle = taper;
-        ctx.lineWidth = 12;
+        ctx.lineWidth = 12 * scale;
         ctx.lineCap = 'round';
         ctx.stroke();
         
@@ -618,19 +663,19 @@ export default function PoolGameComponent() {
         ctx.fill();
         
         // Cue tip (leather)
-        const tipGrad = ctx.createRadialGradient(startX, startY, 0, startX, startY, 5);
+        const tipGrad = ctx.createRadialGradient(startX, startY, 0, startX, startY, 5 * scale);
         tipGrad.addColorStop(0, '#87CEEB');
         tipGrad.addColorStop(0.5, '#4682B4');
         tipGrad.addColorStop(1, '#1E5A8E');
         ctx.fillStyle = tipGrad;
         ctx.beginPath();
-        ctx.arc(startX, startY, 5, 0, Math.PI * 2);
+        ctx.arc(startX, startY, 5 * scale, 0, Math.PI * 2);
         ctx.fill();
         
         // Tip chalk dust effect
         ctx.fillStyle = 'rgba(135, 206, 235, 0.3)';
         ctx.beginPath();
-        ctx.arc(startX, startY, 7, 0, Math.PI * 2);
+        ctx.arc(startX, startY, 7 * scale, 0, Math.PI * 2);
         ctx.fill();
         
         ctx.restore();
@@ -638,45 +683,48 @@ export default function PoolGameComponent() {
         // Enhanced aiming guide
         const aimGradient = ctx.createLinearGradient(
           cueBall.x, cueBall.y,
-          cueBall.x + Math.cos(selectedAngle) * 250, 
-          cueBall.y + Math.sin(selectedAngle) * 250
+          cueBall.x + Math.cos(selectedAngle) * 250 * scale, 
+          cueBall.y + Math.sin(selectedAngle) * 250 * scale
         );
         aimGradient.addColorStop(0, 'rgba(255, 255, 100, 0.8)');
         aimGradient.addColorStop(0.5, 'rgba(255, 255, 200, 0.4)');
         aimGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
         
         ctx.strokeStyle = aimGradient;
-        ctx.lineWidth = 3;
-        ctx.setLineDash([8, 4]);
+        ctx.lineWidth = 3 * scale;
+        ctx.setLineDash([8 * scale, 4 * scale]);
         ctx.lineDashOffset = Date.now() / 50 % 12; // Animated dashes
         ctx.beginPath();
         ctx.moveTo(cueBall.x, cueBall.y);
-        ctx.lineTo(cueBall.x + Math.cos(selectedAngle) * 250, cueBall.y + Math.sin(selectedAngle) * 250);
+        ctx.lineTo(cueBall.x + Math.cos(selectedAngle) * 250 * scale, cueBall.y + Math.sin(selectedAngle) * 250 * scale);
         ctx.stroke();
         ctx.setLineDash([]);
       }
     }
-  }, [balls, selectedAngle, gameScreen]);
+  }, [balls, selectedAngle, gameScreen, scale, canvasSize]);
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
-      <h1 className="text-4xl font-bold text-white mb-8"><a href="https://www.AussieSoft.com.au">Onni</a> 8-Ball Pool</h1>
+    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-2 md:p-4">
+      <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8"><a href="https://www.AussieSoft.com.au">Onni</a> 8-Ball Pool</h1>
       
-      <div className="relative bg-gray-800 p-4 rounded-lg shadow-2xl">
+      <div id="game-container" className="relative bg-gray-800 p-2 md:p-4 rounded-lg shadow-2xl w-full max-w-4xl">
         <canvas
           ref={canvasRef}
-          width={800}
-          height={400}
-          className="border-4 border-gray-700 rounded cursor-crosshair"
-          onMouseMove={handleMouseMove}
+          width={canvasSize.width}
+          height={canvasSize.height}
+          className="border-2 md:border-4 border-gray-700 rounded cursor-crosshair w-full h-auto"
+          onMouseMove={handlePointerMove}
+          onTouchMove={handlePointerMove}
           onClick={handleAngleClick}
+          onTouchEnd={handleAngleClick}
+          style={{ maxWidth: '100%', height: 'auto' }}
         />
         
         {gameScreen === 'speed' && (
           <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center rounded">
-            <div className="bg-gray-800 p-8 rounded-lg">
-              <h2 className="text-2xl font-bold text-white mb-4">Select Power</h2>
-              <div className="w-64">
+            <div className="bg-gray-800 p-4 md:p-8 rounded-lg mx-4 w-full max-w-sm">
+              <h2 className="text-xl md:text-2xl font-bold text-white mb-4">Select Power</h2>
+              <div className="w-full">
                 <input
                   type="range"
                   min="0"
@@ -685,7 +733,7 @@ export default function PoolGameComponent() {
                   onChange={(e) => setSelectedSpeed(Number(e.target.value))}
                   className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer"
                 />
-                <div className="flex justify-between text-white mt-2">
+                <div className="flex justify-between text-white mt-2 text-sm md:text-base">
                   <span>Soft</span>
                   <span>{selectedSpeed}%</span>
                   <span>Hard</span>
@@ -693,7 +741,7 @@ export default function PoolGameComponent() {
               </div>
               <button
                 onClick={shoot}
-                className="mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded"
+                className="mt-4 md:mt-6 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-2 px-4 md:px-6 rounded w-full"
               >
                 Shoot!
               </button>
@@ -702,15 +750,15 @@ export default function PoolGameComponent() {
         )}
       </div>
       
-      <div className="mt-4 text-white">
-        {gameScreen === 'angle' && <p>Click and move mouse to aim, then click to confirm angle</p>}
+      <div className="mt-2 md:mt-4 text-white text-sm md:text-base text-center">
+        {gameScreen === 'angle' && <p>Tap and drag to aim, then tap to confirm angle</p>}
         {gameScreen === 'playing' && <p>Game in progress...</p>}
       </div>
       
       {gameScreen === 'playing' && (
         <button
           onClick={() => window.location.reload()}
-          className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          className="mt-2 md:mt-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-2 px-4 rounded"
         >
           New Game
         </button>
