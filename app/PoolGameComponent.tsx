@@ -16,6 +16,16 @@ interface Ball {
   scale: number;
 }
 
+// Helper function to convert hex color to RGB
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+
 export default function PoolGameComponent() {
   const [gameScreen, setGameScreen] = useState<'angle' | 'speed' | 'playing'>('angle');
   const [selectedAngle, setSelectedAngle] = useState(0);
@@ -26,13 +36,15 @@ export default function PoolGameComponent() {
 
   // Initialize balls in standard 8-ball formation
   useEffect(() => {
-    const startX = 500;
-    const startY = 200; // Adjusted for shorter table
+    const railWidth = 40;
     const ballRadius = 12;
     const spacing = ballRadius * 2.2;
+    // Ensure all balls start within the play area
+    const startX = 500;
+    const startY = 200; // Center of table
     
     const initialBalls: Ball[] = [
-      // Cue ball
+      // Cue ball - ensure it's well within the play area
       { id: 0, x: 200, y: 200, vx: 0, vy: 0, color: 'white', number: 0, isPocketed: false, scale: 1 },
       
       // Row 1 (1 ball)
@@ -122,6 +134,7 @@ export default function PoolGameComponent() {
         const pocketRadius = 20;
         const tableWidth = 800;
         const tableHeight = 400; // Shorter table
+        const railWidth = 40; // Define railWidth here for the physics loop
         
         const currentTime = Date.now();
         
@@ -154,18 +167,41 @@ export default function PoolGameComponent() {
           ball.vx *= friction;
           ball.vy *= friction;
           
-          // Update position
-          ball.x += ball.vx;
-          ball.y += ball.vy;
+          // Calculate next position
+          const nextX = ball.x + ball.vx;
+          const nextY = ball.y + ball.vy;
           
-          // Pocket positions
+          // Define play area boundaries (green felt area only)
+          const minX = railWidth + ballRadius;
+          const maxX = tableWidth - railWidth - ballRadius;
+          const minY = railWidth + ballRadius;
+          const maxY = tableHeight - railWidth - ballRadius;
+          
+          // Check if next position would be in the wall
+          if (nextX < minX || nextX > maxX) {
+            ball.vx = -ball.vx * 0.8;
+            // Keep ball at boundary
+            ball.x = nextX < minX ? minX : maxX;
+          } else {
+            ball.x = nextX;
+          }
+          
+          if (nextY < minY || nextY > maxY) {
+            ball.vy = -ball.vy * 0.8;
+            // Keep ball at boundary
+            ball.y = nextY < minY ? minY : maxY;
+          } else {
+            ball.y = nextY;
+          }
+          
+          // Pocket positions - adjusted for rail width
           const pockets = [
-            { x: 30, y: 30 },
-            { x: tableWidth / 2, y: 20 },
-            { x: tableWidth - 30, y: 30 },
-            { x: 30, y: tableHeight - 30 },
-            { x: tableWidth / 2, y: tableHeight - 20 },
-            { x: tableWidth - 30, y: tableHeight - 30 }
+            { x: railWidth + 5, y: railWidth + 5 },
+            { x: tableWidth / 2, y: railWidth - 5 },
+            { x: tableWidth - railWidth - 5, y: railWidth + 5 },
+            { x: railWidth + 5, y: tableHeight - railWidth - 5 },
+            { x: tableWidth / 2, y: tableHeight - railWidth + 5 },
+            { x: tableWidth - railWidth - 5, y: tableHeight - railWidth - 5 }
           ];
           
           // Check pocket collisions
@@ -186,16 +222,6 @@ export default function PoolGameComponent() {
               ball.vy = 0;
               break;
             }
-          }
-          
-          // Wall collisions
-          if (ball.x - ballRadius < 0 || ball.x + ballRadius > tableWidth) {
-            ball.vx = -ball.vx * 0.8;
-            ball.x = ball.x - ballRadius < 0 ? ballRadius : tableWidth - ballRadius;
-          }
-          if (ball.y - ballRadius < 0 || ball.y + ballRadius > tableHeight) {
-            ball.vy = -ball.vy * 0.8;
-            ball.y = ball.y - ballRadius < 0 ? ballRadius : tableHeight - ballRadius;
           }
           
           // Ball-to-ball collisions
@@ -275,68 +301,133 @@ export default function PoolGameComponent() {
     // Clear canvas
     ctx.clearRect(0, 0, 800, 400);
     
-    // Draw table background with gradient
-    const tableGradient = ctx.createLinearGradient(0, 0, 0, 400);
-    tableGradient.addColorStop(0, '#0f6018');
-    tableGradient.addColorStop(0.5, '#0d5016');
-    tableGradient.addColorStop(1, '#0b4013');
-    ctx.fillStyle = tableGradient;
+    // Draw outer wood frame first (rails/cushions)
+    const railWidth = 40;
+    
+    // Wood frame with realistic texture
+    const woodPattern = ctx.createLinearGradient(0, 0, 800, 400);
+    woodPattern.addColorStop(0, '#3E2723');
+    woodPattern.addColorStop(0.2, '#5D4037');
+    woodPattern.addColorStop(0.4, '#4E342E');
+    woodPattern.addColorStop(0.6, '#5D4037');
+    woodPattern.addColorStop(0.8, '#4E342E');
+    woodPattern.addColorStop(1, '#3E2723');
+    
+    // Draw outer frame
+    ctx.fillStyle = woodPattern;
     ctx.fillRect(0, 0, 800, 400);
     
-    // Add subtle texture pattern
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-    for (let i = 0; i < 800; i += 4) {
-      for (let j = 0; j < 400; j += 4) {
-        if ((i + j) % 8 === 0) {
-          ctx.fillRect(i, j, 2, 2);
+    // Add wood grain texture
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 800; i += 8) {
+      ctx.beginPath();
+      ctx.moveTo(i + Math.sin(i * 0.02) * 2, 0);
+      ctx.lineTo(i + Math.sin(i * 0.02 + 0.5) * 2, 400);
+      ctx.stroke();
+    }
+    
+    // Draw inner playing area (green felt)
+    const playAreaX = railWidth;
+    const playAreaY = railWidth;
+    const playAreaWidth = 800 - (railWidth * 2);
+    const playAreaHeight = 400 - (railWidth * 2);
+    
+    // Table felt with better gradient
+    const tableGradient = ctx.createRadialGradient(400, 200, 100, 400, 200, 400);
+    tableGradient.addColorStop(0, '#0f7020');
+    tableGradient.addColorStop(0.5, '#0d5518');
+    tableGradient.addColorStop(1, '#0a4012');
+    ctx.fillStyle = tableGradient;
+    ctx.fillRect(playAreaX, playAreaY, playAreaWidth, playAreaHeight);
+    
+    // Add felt texture
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+    for (let i = playAreaX; i < playAreaX + playAreaWidth; i += 3) {
+      for (let j = playAreaY; j < playAreaY + playAreaHeight; j += 3) {
+        if ((i + j) % 6 === 0) {
+          ctx.fillRect(i, j, 1, 1);
         }
       }
     }
     
-    // Draw table border with wood texture
-    const woodGradient = ctx.createLinearGradient(0, 0, 800, 0);
-    woodGradient.addColorStop(0, '#654321');
-    woodGradient.addColorStop(0.5, '#8B4513');
-    woodGradient.addColorStop(1, '#654321');
-    ctx.strokeStyle = woodGradient;
-    ctx.lineWidth = 20;
-    ctx.strokeRect(10, 10, 780, 380);
+    // Rail shadows on felt
+    const shadowGrad = ctx.createLinearGradient(playAreaX, playAreaY, playAreaX + 20, playAreaY);
+    shadowGrad.addColorStop(0, 'rgba(0, 0, 0, 0.3)');
+    shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = shadowGrad;
+    ctx.fillRect(playAreaX, playAreaY, 20, playAreaHeight);
     
-    // Inner border highlight
+    const shadowGradRight = ctx.createLinearGradient(playAreaX + playAreaWidth - 20, playAreaY, playAreaX + playAreaWidth, playAreaY);
+    shadowGradRight.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    shadowGradRight.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+    ctx.fillStyle = shadowGradRight;
+    ctx.fillRect(playAreaX + playAreaWidth - 20, playAreaY, 20, playAreaHeight);
+    
+    const shadowGradTop = ctx.createLinearGradient(playAreaX, playAreaY, playAreaX, playAreaY + 20);
+    shadowGradTop.addColorStop(0, 'rgba(0, 0, 0, 0.3)');
+    shadowGradTop.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = shadowGradTop;
+    ctx.fillRect(playAreaX, playAreaY, playAreaWidth, 20);
+    
+    const shadowGradBottom = ctx.createLinearGradient(playAreaX, playAreaY + playAreaHeight - 20, playAreaX, playAreaY + playAreaHeight);
+    shadowGradBottom.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    shadowGradBottom.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+    ctx.fillStyle = shadowGradBottom;
+    ctx.fillRect(playAreaX, playAreaY + playAreaHeight - 20, playAreaWidth, 20);
+    
+    // Rail highlights
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(20, 20, 760, 360);
+    ctx.lineWidth = 1;
+    ctx.strokeRect(railWidth - 1, railWidth - 1, playAreaWidth + 2, playAreaHeight + 2);
     
-    // Draw pockets with depth effect
+    // Draw pockets with improved 3D effect
     const pocketPositions = [
-      { x: 30, y: 30 },
-      { x: 400, y: 20 },
-      { x: 770, y: 30 },
-      { x: 30, y: 370 },
-      { x: 400, y: 380 },
-      { x: 770, y: 370 }
+      { x: railWidth + 5, y: railWidth + 5 },
+      { x: 400, y: railWidth - 5 },
+      { x: 800 - railWidth - 5, y: railWidth + 5 },
+      { x: railWidth + 5, y: 400 - railWidth - 5 },
+      { x: 400, y: 400 - railWidth + 5 },
+      { x: 800 - railWidth - 5, y: 400 - railWidth - 5 }
     ];
     
     pocketPositions.forEach(pos => {
-      // Outer ring (metal/leather)
-      const pocketGradient = ctx.createRadialGradient(pos.x, pos.y, 15, pos.x, pos.y, 25);
-      pocketGradient.addColorStop(0, '#000000');
-      pocketGradient.addColorStop(0.7, '#1a1a1a');
-      pocketGradient.addColorStop(1, '#333333');
-      ctx.fillStyle = pocketGradient;
+      // Pocket cut-out in wood
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-out';
       ctx.beginPath();
-      ctx.arc(pos.x, pos.y, 25, 0, Math.PI * 2);
+      ctx.arc(pos.x, pos.y, 28, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      
+      // Pocket leather/net backing
+      const netGradient = ctx.createRadialGradient(pos.x, pos.y, 10, pos.x, pos.y, 28);
+      netGradient.addColorStop(0, '#000000');
+      netGradient.addColorStop(0.3, '#1a0f0a');
+      netGradient.addColorStop(0.7, '#2d1810');
+      netGradient.addColorStop(1, '#3d2418');
+      ctx.fillStyle = netGradient;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, 28, 0, Math.PI * 2);
       ctx.fill();
       
-      // Inner pocket (black hole effect)
-      const innerGradient = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 20);
-      innerGradient.addColorStop(0, '#000000');
-      innerGradient.addColorStop(0.8, '#000000');
-      innerGradient.addColorStop(1, 'rgba(0, 0, 0, 0.8)');
-      ctx.fillStyle = innerGradient;
+      // Inner pocket depth
+      const depthGradient = ctx.createRadialGradient(pos.x - 3, pos.y - 3, 0, pos.x, pos.y, 22);
+      depthGradient.addColorStop(0, '#000000');
+      depthGradient.addColorStop(0.5, '#000000');
+      depthGradient.addColorStop(0.8, '#0a0503');
+      depthGradient.addColorStop(1, '#1a0a05');
+      ctx.fillStyle = depthGradient;
       ctx.beginPath();
-      ctx.arc(pos.x, pos.y, 20, 0, Math.PI * 2);
+      ctx.arc(pos.x, pos.y, 22, 0, Math.PI * 2);
       ctx.fill();
+      
+      // Pocket rim highlight
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, 27, -Math.PI/4, Math.PI/4);
+      ctx.stroke();
     });
     
     // Draw balls
@@ -346,18 +437,17 @@ export default function PoolGameComponent() {
       
       const displayRadius = 12 * ball.scale;
       
-      // Ball shadow (more realistic)
-      const shadowGradient = ctx.createRadialGradient(
-        ball.x + 3, ball.y + 3, 0,
-        ball.x + 3, ball.y + 3, displayRadius + 4
-      );
-      shadowGradient.addColorStop(0, `rgba(0, 0, 0, ${0.4 * ball.scale})`);
-      shadowGradient.addColorStop(0.8, `rgba(0, 0, 0, ${0.2 * ball.scale})`);
-      shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = shadowGradient;
+      // Enhanced ball shadow with blur effect
+      ctx.save();
+      ctx.shadowColor = `rgba(0, 0, 0, ${0.5 * ball.scale})`;
+      ctx.shadowBlur = 8 * ball.scale;
+      ctx.shadowOffsetX = 3 * ball.scale;
+      ctx.shadowOffsetY = 3 * ball.scale;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
       ctx.beginPath();
-      ctx.arc(ball.x + 3, ball.y + 3, displayRadius + 4, 0, Math.PI * 2);
+      ctx.arc(ball.x, ball.y, displayRadius, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
       
       // Ball with gradient
       const ballGradient = ctx.createRadialGradient(
@@ -365,21 +455,31 @@ export default function PoolGameComponent() {
         ball.x, ball.y, displayRadius
       );
       
-      // Special gradient for cue ball
+      // Enhanced gradients for more realistic lighting
       if (ball.number === 0) {
         ballGradient.addColorStop(0, '#ffffff');
-        ballGradient.addColorStop(0.7, '#f0f0f0');
-        ballGradient.addColorStop(1, '#d0d0d0');
+        ballGradient.addColorStop(0.3, '#fafafa');
+        ballGradient.addColorStop(0.7, '#e8e8e8');
+        ballGradient.addColorStop(1, '#cccccc');
       } else if (ball.number === 8) {
-        ballGradient.addColorStop(0, '#333333');
+        ballGradient.addColorStop(0, '#4a4a4a');
+        ballGradient.addColorStop(0.3, '#2a2a2a');
         ballGradient.addColorStop(0.7, '#000000');
         ballGradient.addColorStop(1, '#000000');
       } else {
-        // Adjust color brightness for gradient
-        const baseColor = ball.color;
-        ballGradient.addColorStop(0, ball.color);
-        ballGradient.addColorStop(0.7, ball.color);
-        ballGradient.addColorStop(1, ball.color);
+        // Create lighter and darker versions of the ball color
+        const rgb = hexToRgb(ball.color);
+        if (rgb) {
+          const lighter = `rgb(${Math.min(255, rgb.r + 60)}, ${Math.min(255, rgb.g + 60)}, ${Math.min(255, rgb.b + 60)})`;
+          const darker = `rgb(${Math.max(0, rgb.r - 40)}, ${Math.max(0, rgb.g - 40)}, ${Math.max(0, rgb.b - 40)})`;
+          ballGradient.addColorStop(0, lighter);
+          ballGradient.addColorStop(0.3, ball.color);
+          ballGradient.addColorStop(0.7, ball.color);
+          ballGradient.addColorStop(1, darker);
+        } else {
+          ballGradient.addColorStop(0, ball.color);
+          ballGradient.addColorStop(1, ball.color);
+        }
       }
       
       ctx.fillStyle = ballGradient;
@@ -398,26 +498,43 @@ export default function PoolGameComponent() {
         ctx.restore();
       }
       
-      // Ball reflection (glass effect)
+      // Enhanced reflection with multiple highlights
+      // Primary highlight
       const reflectionGradient = ctx.createRadialGradient(
         ball.x - displayRadius * 0.3, ball.y - displayRadius * 0.3, 0,
-        ball.x - displayRadius * 0.3, ball.y - displayRadius * 0.3, displayRadius * 0.7
+        ball.x - displayRadius * 0.3, ball.y - displayRadius * 0.3, displayRadius * 0.6
       );
-      reflectionGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-      reflectionGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.3)');
+      reflectionGradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+      reflectionGradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.6)');
+      reflectionGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
       reflectionGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
       
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
       ctx.fillStyle = reflectionGradient;
       ctx.beginPath();
       ctx.arc(ball.x, ball.y, displayRadius, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
       
-      // Ball border (subtle)
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-      ctx.lineWidth = 0.5;
+      // Secondary small highlight
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.beginPath();
+      ctx.arc(ball.x - displayRadius * 0.4, ball.y - displayRadius * 0.4, displayRadius * 0.15, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Ball edge definition
+      const edgeGradient = ctx.createRadialGradient(
+        ball.x, ball.y, displayRadius * 0.8,
+        ball.x, ball.y, displayRadius
+      );
+      edgeGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+      edgeGradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.1)');
+      edgeGradient.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
+      ctx.fillStyle = edgeGradient;
       ctx.beginPath();
       ctx.arc(ball.x, ball.y, displayRadius, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.fill();
       
       // Number on ball (except cue ball)
       if (ball.number > 0 && ball.scale > 0.3) {
@@ -441,61 +558,100 @@ export default function PoolGameComponent() {
     if (gameScreen === 'angle') {
       const cueBall = balls.find(b => b.id === 0);
       if (cueBall) {
-        const cueLength = 150;
-        const cueOffset = 30;
+        const cueLength = 180;
+        const cueOffset = 35;
         const startX = cueBall.x - Math.cos(selectedAngle) * cueOffset;
         const startY = cueBall.y - Math.sin(selectedAngle) * cueOffset;
         const endX = startX - Math.cos(selectedAngle) * cueLength;
         const endY = startY - Math.sin(selectedAngle) * cueLength;
         
-        // Cue stick gradient
-        const cueGradient = ctx.createLinearGradient(startX, startY, endX, endY);
-        cueGradient.addColorStop(0, '#D2691E');
-        cueGradient.addColorStop(0.3, '#8B4513');
-        cueGradient.addColorStop(0.7, '#654321');
-        cueGradient.addColorStop(1, '#3E2723');
-        
-        // Draw cue stick with taper
+        // Draw cue shadow first
         ctx.save();
-        ctx.strokeStyle = cueGradient;
-        ctx.lineWidth = 10;
-        ctx.lineCap = 'round';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        
+        // Cue stick shaft with taper effect
         ctx.beginPath();
         ctx.moveTo(startX, startY);
         ctx.lineTo(endX, endY);
+        
+        // Create tapered effect
+        const taper = ctx.createLinearGradient(startX, startY, endX, endY);
+        taper.addColorStop(0, '#D4A574');
+        taper.addColorStop(0.2, '#A67C52');
+        taper.addColorStop(0.5, '#8B5A3C');
+        taper.addColorStop(0.8, '#654321');
+        taper.addColorStop(1, '#4A2C17');
+        
+        ctx.strokeStyle = taper;
+        ctx.lineWidth = 12;
+        ctx.lineCap = 'round';
         ctx.stroke();
         
-        // Cue tip (white)
-        ctx.fillStyle = '#F5F5DC';
+        // Wood grain detail
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.lineWidth = 0.5;
+        for (let i = 0; i < 5; i++) {
+          const offset = (i - 2) * 2;
+          const grainX1 = startX + Math.cos(selectedAngle + Math.PI/2) * offset;
+          const grainY1 = startY + Math.sin(selectedAngle + Math.PI/2) * offset;
+          const grainX2 = endX + Math.cos(selectedAngle + Math.PI/2) * offset;
+          const grainY2 = endY + Math.sin(selectedAngle + Math.PI/2) * offset;
+          ctx.beginPath();
+          ctx.moveTo(grainX1, grainY1);
+          ctx.lineTo(grainX2, grainY2);
+          ctx.stroke();
+        }
+        
+        // Ferrule (ivory/plastic connector)
+        const ferruleX = startX - Math.cos(selectedAngle) * 12;
+        const ferruleY = startY - Math.sin(selectedAngle) * 12;
+        const ferruleGrad = ctx.createRadialGradient(ferruleX, ferruleY, 0, ferruleX, ferruleY, 6);
+        ferruleGrad.addColorStop(0, '#FFFFF0');
+        ferruleGrad.addColorStop(0.7, '#F0E68C');
+        ferruleGrad.addColorStop(1, '#D3D3D3');
+        ctx.fillStyle = ferruleGrad;
+        ctx.beginPath();
+        ctx.arc(ferruleX, ferruleY, 6, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Cue tip (leather)
+        const tipGrad = ctx.createRadialGradient(startX, startY, 0, startX, startY, 5);
+        tipGrad.addColorStop(0, '#87CEEB');
+        tipGrad.addColorStop(0.5, '#4682B4');
+        tipGrad.addColorStop(1, '#1E5A8E');
+        ctx.fillStyle = tipGrad;
         ctx.beginPath();
         ctx.arc(startX, startY, 5, 0, Math.PI * 2);
         ctx.fill();
         
-        // Ferrule (metallic band)
-        ctx.strokeStyle = '#C0C0C0';
-        ctx.lineWidth = 3;
+        // Tip chalk dust effect
+        ctx.fillStyle = 'rgba(135, 206, 235, 0.3)';
         ctx.beginPath();
-        const ferruleX = startX - Math.cos(selectedAngle) * 10;
-        const ferruleY = startY - Math.sin(selectedAngle) * 10;
-        ctx.arc(ferruleX, ferruleY, 4, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.arc(startX, startY, 7, 0, Math.PI * 2);
+        ctx.fill();
+        
         ctx.restore();
         
-        // Aiming line with gradient
+        // Enhanced aiming guide
         const aimGradient = ctx.createLinearGradient(
           cueBall.x, cueBall.y,
-          cueBall.x + Math.cos(selectedAngle) * 200, 
-          cueBall.y + Math.sin(selectedAngle) * 200
+          cueBall.x + Math.cos(selectedAngle) * 250, 
+          cueBall.y + Math.sin(selectedAngle) * 250
         );
-        aimGradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+        aimGradient.addColorStop(0, 'rgba(255, 255, 100, 0.8)');
+        aimGradient.addColorStop(0.5, 'rgba(255, 255, 200, 0.4)');
         aimGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
         
         ctx.strokeStyle = aimGradient;
-        ctx.lineWidth = 2;
-        ctx.setLineDash([5, 5]);
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8, 4]);
+        ctx.lineDashOffset = Date.now() / 50 % 12; // Animated dashes
         ctx.beginPath();
         ctx.moveTo(cueBall.x, cueBall.y);
-        ctx.lineTo(cueBall.x + Math.cos(selectedAngle) * 200, cueBall.y + Math.sin(selectedAngle) * 200);
+        ctx.lineTo(cueBall.x + Math.cos(selectedAngle) * 250, cueBall.y + Math.sin(selectedAngle) * 250);
         ctx.stroke();
         ctx.setLineDash([]);
       }
