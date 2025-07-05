@@ -194,14 +194,14 @@ export default function PoolGameComponent() {
             ball.y = nextY;
           }
           
-          // Pocket positions - adjusted for rail width
+          // Pocket positions - at corners and midpoints of play area
           const pockets = [
-            { x: railWidth + 5, y: railWidth + 5 },
-            { x: tableWidth / 2, y: railWidth - 5 },
-            { x: tableWidth - railWidth - 5, y: railWidth + 5 },
-            { x: railWidth + 5, y: tableHeight - railWidth - 5 },
-            { x: tableWidth / 2, y: tableHeight - railWidth + 5 },
-            { x: tableWidth - railWidth - 5, y: tableHeight - railWidth - 5 }
+            { x: railWidth, y: railWidth },  // Top-left corner
+            { x: tableWidth / 2, y: railWidth },  // Top-middle
+            { x: tableWidth - railWidth, y: railWidth },  // Top-right corner
+            { x: railWidth, y: tableHeight - railWidth },  // Bottom-left corner
+            { x: tableWidth / 2, y: tableHeight - railWidth },  // Bottom-middle
+            { x: tableWidth - railWidth, y: tableHeight - railWidth }  // Bottom-right corner
           ];
           
           // Check pocket collisions
@@ -383,12 +383,12 @@ export default function PoolGameComponent() {
     
     // Draw pockets with improved 3D effect
     const pocketPositions = [
-      { x: railWidth + 5, y: railWidth + 5 },
-      { x: 400, y: railWidth - 5 },
-      { x: 800 - railWidth - 5, y: railWidth + 5 },
-      { x: railWidth + 5, y: 400 - railWidth - 5 },
-      { x: 400, y: 400 - railWidth + 5 },
-      { x: 800 - railWidth - 5, y: 400 - railWidth - 5 }
+      { x: railWidth, y: railWidth },  // Top-left corner
+      { x: 400, y: railWidth },  // Top-middle
+      { x: 800 - railWidth, y: railWidth },  // Top-right corner
+      { x: railWidth, y: 400 - railWidth },  // Bottom-left corner
+      { x: 400, y: 400 - railWidth },  // Bottom-middle
+      { x: 800 - railWidth, y: 400 - railWidth }  // Bottom-right corner
     ];
     
     pocketPositions.forEach(pos => {
