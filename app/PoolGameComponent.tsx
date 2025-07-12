@@ -35,6 +35,7 @@ export default function PoolGameComponent() {
   const animationRef = useRef<number | undefined>(undefined);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 400 });
   const [scale, setScale] = useState(1);
+  const [sunkBallsCount, setSunkBallsCount] = useState(0);
   
   // Constants for the original game size
   const ORIGINAL_WIDTH = 800;
@@ -258,13 +259,23 @@ export default function PoolGameComponent() {
             // Ball disappears when 30% or more overlaps with pocket
             // This means when the distance is less than (pocketRadius + ballRadius * 0.7)
             if (distance < pocketRadius + ballRadius * 0.7) {
-              ball.isPocketed = true;
-              ball.pocketedTime = currentTime;
-              ball.pocketPosition = { x: pocket.x, y: pocket.y };
-              ball.x = pocket.x;
-              ball.y = pocket.y;
-              ball.vx = 0;
-              ball.vy = 0;
+              if (ball.id === 0) {
+                // White ball - place back at start position
+                ball.x = 200 * scale;
+                ball.y = 200 * scale;
+                ball.vx = 0;
+                ball.vy = 0;
+              } else {
+                // Regular ball - mark as pocketed and count it
+                ball.isPocketed = true;
+                ball.pocketedTime = currentTime;
+                ball.pocketPosition = { x: pocket.x, y: pocket.y };
+                ball.x = pocket.x;
+                ball.y = pocket.y;
+                ball.vx = 0;
+                ball.vy = 0;
+                setSunkBallsCount(prev => prev + 1);
+              }
               break;
             }
           }
@@ -318,6 +329,16 @@ export default function PoolGameComponent() {
             ball.vx = 0;
             ball.vy = 0;
           }
+        }
+        
+        // Check if all balls have stopped moving
+        const allBallsStopped = newBalls.every(ball => 
+          ball.vx === 0 && ball.vy === 0
+        );
+        
+        // If all balls stopped and we're in playing mode, go back to angle selection
+        if (allBallsStopped && gameScreen === 'playing') {
+          setGameScreen('angle');
         }
         
         return newBalls;
@@ -708,6 +729,33 @@ export default function PoolGameComponent() {
       <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8"><a href="https://www.AussieSoft.com.au">Onni</a> 8-Ball Pool</h1>
       
       <div id="game-container" className="relative bg-gray-800 p-2 md:p-4 rounded-lg shadow-2xl w-full max-w-4xl">
+        <div className="flex justify-between items-center mb-2 md:mb-4">
+          <div className="text-white text-lg md:text-xl font-semibold">
+            Balls Sunk: {sunkBallsCount}
+          </div>
+          {gameScreen === 'playing' && (
+            <button
+              onClick={() => {
+                setGameScreen('angle');
+                setSunkBallsCount(0);
+                setBalls(prevBalls => prevBalls.map(ball => ({
+                  ...ball,
+                  isPocketed: false,
+                  scale: 1,
+                  pocketedTime: undefined,
+                  pocketPosition: undefined,
+                  x: ball.id === 0 ? 200 * scale : ball.x,
+                  y: ball.id === 0 ? 200 * scale : ball.y,
+                  vx: 0,
+                  vy: 0
+                })));
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 md:py-2 md:px-4 rounded text-sm md:text-base"
+            >
+              New Game
+            </button>
+          )}
+        </div>
         <canvas
           ref={canvasRef}
           width={canvasSize.width}
