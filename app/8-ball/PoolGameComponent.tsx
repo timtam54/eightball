@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 
 interface Ball {
   id: number;
@@ -36,6 +37,7 @@ export default function PoolGameComponent() {
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 400 });
   const [scale, setScale] = useState(1);
   const [sunkBallsCount, setSunkBallsCount] = useState(0);
+  const [cameraView, setCameraView] = useState<'top' | 'front' | 'angle' | 'side'>('top');
   
   // Constants for the original game size
   const ORIGINAL_WIDTH = 800;
@@ -356,6 +358,39 @@ export default function PoolGameComponent() {
     };
   }, [gameScreen, scale, ORIGINAL_WIDTH, ORIGINAL_HEIGHT]);
 
+  // Apply camera transformations to the canvas
+  const applyCameraTransform = (ctx: CanvasRenderingContext2D) => {
+    ctx.save();
+    
+    switch (cameraView) {
+      case 'top':
+        // Standard top-down view - no transformation needed
+        break;
+        
+      case 'front':
+        // Front view - looking at the table from the side
+        ctx.translate(canvasSize.width / 2, canvasSize.height * 0.7);
+        ctx.scale(1, 0.5);
+        ctx.translate(-canvasSize.width / 2, -canvasSize.height);
+        break;
+        
+      case 'angle':
+        // Angled 3D-like view
+        ctx.translate(canvasSize.width / 2, canvasSize.height * 0.3);
+        ctx.scale(1, 0.6);
+        ctx.rotate(-0.1);
+        ctx.translate(-canvasSize.width / 2, 0);
+        break;
+        
+      case 'side':
+        // Side view with perspective
+        ctx.translate(0, canvasSize.height * 0.4);
+        ctx.scale(1.2, 0.4);
+        ctx.translate(0, -canvasSize.height * 0.2);
+        break;
+    }
+  };
+
   // Draw the game
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -366,6 +401,9 @@ export default function PoolGameComponent() {
     
     // Clear canvas
     ctx.clearRect(0, 0, canvasSize.width, canvasSize.height);
+    
+    // Apply camera transformation
+    applyCameraTransform(ctx);
     
     // Draw outer wood frame first (rails/cushions)
     const railWidth = 40 * scale;
@@ -722,39 +760,60 @@ export default function PoolGameComponent() {
         ctx.setLineDash([]);
       }
     }
-  }, [balls, selectedAngle, gameScreen, scale, canvasSize]);
+    
+    // Restore canvas state after camera transformation
+    ctx.restore();
+  }, [balls, selectedAngle, gameScreen, scale, canvasSize, cameraView, applyCameraTransform]);
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-2 md:p-4">
       <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8"><a href="https://www.AussieSoft.com.au">Onni</a> 8-Ball Pool</h1>
+      
+      <div className="mb-4">
+        <Link href="/games" className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-colors">
+          Back to Games →
+        </Link>
+      </div>
       
       <div id="game-container" className="relative bg-gray-800 p-2 md:p-4 rounded-lg shadow-2xl w-full max-w-4xl">
         <div className="flex justify-between items-center mb-2 md:mb-4">
           <div className="text-white text-lg md:text-xl font-semibold">
             Balls Sunk: {sunkBallsCount}
           </div>
-          {gameScreen === 'playing' && (
-            <button
-              onClick={() => {
-                setGameScreen('angle');
-                setSunkBallsCount(0);
-                setBalls(prevBalls => prevBalls.map(ball => ({
-                  ...ball,
-                  isPocketed: false,
-                  scale: 1,
-                  pocketedTime: undefined,
-                  pocketPosition: undefined,
-                  x: ball.id === 0 ? 200 * scale : ball.x,
-                  y: ball.id === 0 ? 200 * scale : ball.y,
-                  vx: 0,
-                  vy: 0
-                })));
-              }}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 md:py-2 md:px-4 rounded text-sm md:text-base"
+          <div className="flex gap-2">
+            <select
+              value={cameraView}
+              onChange={(e) => setCameraView(e.target.value as 'top' | 'front' | 'angle' | 'side')}
+              className="bg-gray-700 text-white px-2 py-1 rounded text-sm md:text-base"
             >
-              New Game
-            </button>
-          )}
+              <option value="top">Top View</option>
+              <option value="front">Front View</option>
+              <option value="angle">Angled View</option>
+              <option value="side">Side View</option>
+            </select>
+            {gameScreen === 'playing' && (
+              <button
+                onClick={() => {
+                  setGameScreen('angle');
+                  setSunkBallsCount(0);
+                  setBalls(prevBalls => prevBalls.map(ball => ({
+                    ...ball,
+                    isPocketed: false,
+                    scale: 1,
+                    pocketedTime: undefined,
+                    pocketPosition: undefined,
+                    x: ball.id === 0 ? 200 * scale : ball.x,
+                    y: ball.id === 0 ? 200 * scale : ball.y,
+                    vx: 0,
+                    vy: 0
+                  })));
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 md:py-2 md:px-4 rounded text-sm md:text-base"
+              >
+                New Game
+              </button>
+            )}
+          </div>
         </div>
         <canvas
           ref={canvasRef}
