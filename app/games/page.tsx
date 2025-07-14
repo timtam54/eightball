@@ -30,7 +30,7 @@ export default function GamesPage() {
           Choose your adventure and compete for the highest scores!
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl w-full">
           {/* 8-Ball Card */}
           <Link href="/8-ball" className="group relative transform transition-all duration-300 hover:scale-105">
             <div className="relative bg-gradient-to-br from-green-900/80 to-green-600/80 backdrop-blur-md rounded-2xl p-8 overflow-hidden border border-green-400/30 shadow-2xl">
@@ -87,6 +87,44 @@ export default function GamesPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-purple-300 font-semibold">Puzzle Game</span>
                   <span className="text-white bg-purple-600/50 px-3 py-1 rounded-full text-sm">
+                    Play Now →
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          {/* Terracotta Card */}
+          <Link href="/terracotta" className="group relative transform transition-all duration-300 hover:scale-105">
+            <div className="relative bg-gradient-to-br from-orange-900/80 to-orange-600/80 backdrop-blur-md rounded-2xl p-8 overflow-hidden border border-orange-400/30 shadow-2xl">
+              <div className="absolute inset-0 bg-gradient-to-br from-transparent to-orange-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              
+              <div className="relative z-10">
+                <div className="flex items-center justify-center mb-6">
+                  <div className="relative">
+                    <div className="w-24 h-24 grid grid-cols-3 grid-rows-3 gap-0.5">
+                      <div className="bg-orange-700 rounded-sm"></div>
+                      <div className="bg-orange-600 rounded-sm"></div>
+                      <div className="bg-orange-700 rounded-sm"></div>
+                      <div className="bg-orange-600 rounded-sm"></div>
+                      <div className="bg-transparent"></div>
+                      <div className="bg-orange-600 rounded-sm"></div>
+                      <div className="bg-orange-700 rounded-sm"></div>
+                      <div className="bg-transparent"></div>
+                      <div className="bg-orange-700 rounded-sm"></div>
+                    </div>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 to-red-600 rounded blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
+                  </div>
+                </div>
+                
+                <h2 className="text-3xl font-bold text-white mb-3">Terracotta Breaker</h2>
+                <p className="text-gray-200 text-lg mb-6">
+                  Break 3D terracotta blocks in this unique Tetris variant!
+                </p>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-orange-300 font-semibold">3D Puzzle</span>
+                  <span className="text-white bg-orange-600/50 px-3 py-1 rounded-full text-sm">
                     Play Now →
                   </span>
                 </div>
