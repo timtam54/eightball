@@ -33,38 +33,165 @@ interface Explosion {
   startTime: number;
 }
 
-const TETRIS_PIECES = [
-  { shape: [[1, 1, 1, 1]], color: '#00CED1' }, // I - Dark Turquoise
-  { shape: [[1, 1], [1, 1]], color: '#FFD700' }, // O - Gold
-  { shape: [[0, 1, 0], [1, 1, 1]], color: '#DA70D6' }, // T - Orchid
-  { shape: [[0, 1, 1], [1, 1, 0]], color: '#32CD32' }, // S - Lime Green
-  { shape: [[1, 1, 0], [0, 1, 1]], color: '#FF6347' }, // Z - Tomato
-  { shape: [[1, 0, 0], [1, 1, 1]], color: '#FF8C00' }, // L - Dark Orange
-  { shape: [[0, 0, 1], [1, 1, 1]], color: '#4169E1' }, // J - Royal Blue
-];
+interface TetrisSkin {
+  name: string;
+  pieces: { shape: number[][], color: string }[];
+  background: string;
+  gridColor: string;
+  gridLineWidth: number;
+  blockStyle: 'classic' | 'modern' | 'neon' | 'brick' | 'glossy';
+  uiBackground: string;
+  uiBorder: string;
+  uiText: string;
+  uiAccent: string;
+  fontFamily: string;
+  buttonStyle: string;
+  buttonHoverStyle: string;
+}
+
+const SKINS: { [key: string]: TetrisSkin } = {
+  classic: {
+    name: 'Classic',
+    pieces: [
+      { shape: [[1, 1, 1, 1]], color: '#00F0F0' }, // I - Cyan
+      { shape: [[1, 1], [1, 1]], color: '#F0F000' }, // O - Yellow
+      { shape: [[0, 1, 0], [1, 1, 1]], color: '#A000F0' }, // T - Purple
+      { shape: [[0, 1, 1], [1, 1, 0]], color: '#00F000' }, // S - Green
+      { shape: [[1, 1, 0], [0, 1, 1]], color: '#F00000' }, // Z - Red
+      { shape: [[1, 0, 0], [1, 1, 1]], color: '#F0A000' }, // L - Orange
+      { shape: [[0, 0, 1], [1, 1, 1]], color: '#0000F0' }, // J - Blue
+    ],
+    background: '#000000',
+    gridColor: '#222222',
+    gridLineWidth: 1,
+    blockStyle: 'classic',
+    uiBackground: 'bg-black',
+    uiBorder: 'border-4 border-gray-700',
+    uiText: 'text-white',
+    uiAccent: 'text-gray-400',
+    fontFamily: 'monospace',
+    buttonStyle: 'bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 border-2 border-gray-600 transition-colors uppercase',
+    buttonHoverStyle: 'hover:bg-gray-600'
+  },
+  modern: {
+    name: 'Modern',
+    pieces: [
+      { shape: [[1, 1, 1, 1]], color: '#00CED1' }, // I - Dark Turquoise
+      { shape: [[1, 1], [1, 1]], color: '#FFD700' }, // O - Gold
+      { shape: [[0, 1, 0], [1, 1, 1]], color: '#DA70D6' }, // T - Orchid
+      { shape: [[0, 1, 1], [1, 1, 0]], color: '#32CD32' }, // S - Lime Green
+      { shape: [[1, 1, 0], [0, 1, 1]], color: '#FF6347' }, // Z - Tomato
+      { shape: [[1, 0, 0], [1, 1, 1]], color: '#FF8C00' }, // L - Dark Orange
+      { shape: [[0, 0, 1], [1, 1, 1]], color: '#4169E1' }, // J - Royal Blue
+    ],
+    background: 'gradient',
+    gridColor: 'rgba(255, 255, 255, 0.1)',
+    gridLineWidth: 0.5,
+    blockStyle: 'modern',
+    uiBackground: 'bg-gradient-to-br from-gray-800 to-gray-900',
+    uiBorder: 'rounded-xl shadow-xl border border-purple-500/30',
+    uiText: 'text-white',
+    uiAccent: 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500',
+    fontFamily: 'sans-serif',
+    buttonStyle: 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transform transition-all hover:scale-105',
+    buttonHoverStyle: 'hover:scale-105'
+  },
+  neon: {
+    name: 'Neon',
+    pieces: [
+      { shape: [[1, 1, 1, 1]], color: '#00FFFF' }, // I - Bright Cyan
+      { shape: [[1, 1], [1, 1]], color: '#FFFF00' }, // O - Bright Yellow
+      { shape: [[0, 1, 0], [1, 1, 1]], color: '#FF00FF' }, // T - Magenta
+      { shape: [[0, 1, 1], [1, 1, 0]], color: '#00FF00' }, // S - Bright Green
+      { shape: [[1, 1, 0], [0, 1, 1]], color: '#FF0080' }, // Z - Hot Pink
+      { shape: [[1, 0, 0], [1, 1, 1]], color: '#FF8800' }, // L - Bright Orange
+      { shape: [[0, 0, 1], [1, 1, 1]], color: '#0080FF' }, // J - Bright Blue
+    ],
+    background: '#0a0a0a',
+    gridColor: '#1a1a1a',
+    gridLineWidth: 1,
+    blockStyle: 'neon',
+    uiBackground: 'bg-gray-950',
+    uiBorder: 'border-2 border-pink-500/50 shadow-[0_0_20px_rgba(236,72,153,0.5)]',
+    uiText: 'text-white',
+    uiAccent: 'text-pink-400',
+    fontFamily: 'monospace',
+    buttonStyle: 'bg-gray-900 hover:bg-gray-800 text-pink-400 font-bold py-2 px-4 border-2 border-pink-500/50 transition-all shadow-[0_0_10px_rgba(236,72,153,0.3)] hover:shadow-[0_0_15px_rgba(236,72,153,0.5)]',
+    buttonHoverStyle: 'hover:bg-gray-800'
+  },
+  brick: {
+    name: 'Brick Breaker',
+    pieces: [
+      { shape: [[1, 1, 1, 1]], color: '#E97451' }, // I - Burnt Sienna
+      { shape: [[1, 1], [1, 1]], color: '#FF7F50' }, // O - Coral
+      { shape: [[0, 1, 0], [1, 1, 1]], color: '#CD5C5C' }, // T - Indian Red
+      { shape: [[0, 1, 1], [1, 1, 0]], color: '#D2691E' }, // S - Chocolate
+      { shape: [[1, 1, 0], [0, 1, 1]], color: '#BC8F8F' }, // Z - Rosy Brown
+      { shape: [[1, 0, 0], [1, 1, 1]], color: '#A0522D' }, // L - Sienna
+      { shape: [[0, 0, 1], [1, 1, 1]], color: '#8B4513' }, // J - Saddle Brown
+    ],
+    background: '#696969',
+    gridColor: '#4a4a4a',
+    gridLineWidth: 2,
+    blockStyle: 'brick',
+    uiBackground: 'bg-stone-800',
+    uiBorder: 'border-4 border-stone-600 shadow-inner',
+    uiText: 'text-orange-100',
+    uiAccent: 'text-orange-400',
+    fontFamily: 'monospace',
+    buttonStyle: 'bg-orange-700 hover:bg-orange-600 text-white font-bold py-2 px-4 border-2 border-orange-800 transition-colors uppercase shadow-md',
+    buttonHoverStyle: 'hover:bg-orange-600'
+  },
+  glossy: {
+    name: 'Glossy 3D',
+    pieces: [
+      { shape: [[1, 1, 1, 1]], color: '#87CEEB' }, // I - Sky Blue
+      { shape: [[1, 1], [1, 1]], color: '#FFD700' }, // O - Gold
+      { shape: [[0, 1, 0], [1, 1, 1]], color: '#9370DB' }, // T - Medium Purple
+      { shape: [[0, 1, 1], [1, 1, 0]], color: '#90EE90' }, // S - Light Green
+      { shape: [[1, 1, 0], [0, 1, 1]], color: '#FF6B6B' }, // Z - Light Red/Coral
+      { shape: [[1, 0, 0], [1, 1, 1]], color: '#FFA500' }, // L - Orange
+      { shape: [[0, 0, 1], [1, 1, 1]], color: '#4ECDC4' }, // J - Turquoise
+    ],
+    background: '#2C3E50',
+    gridColor: 'rgba(255, 255, 255, 0.05)',
+    gridLineWidth: 1,
+    blockStyle: 'glossy',
+    uiBackground: 'bg-slate-800',
+    uiBorder: 'rounded-2xl shadow-2xl border border-slate-600',
+    uiText: 'text-white',
+    uiAccent: 'text-sky-400',
+    fontFamily: 'system-ui',
+    buttonStyle: 'bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform transition-all hover:scale-105',
+    buttonHoverStyle: 'hover:scale-105'
+  }
+};
 
 const BOARD_WIDTH = 10;
 const BOARD_HEIGHT = 20;
-const CELL_SIZE = 30;
+const CELL_SIZE = 28;
 
 export default function TetrisComponent() {
   const [board, setBoard] = useState<(string | null)[][]>(() =>
     Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill(null))
   );
   const [currentPiece, setCurrentPiece] = useState<Piece | null>(null);
-  const [nextPiece, setNextPiece] = useState<Piece | null>(null);
+  const [nextPieces, setNextPieces] = useState<Piece[]>([]);
   const [score, setScore] = useState(0);
   const [lines, setLines] = useState(0);
   const [level, setLevel] = useState(1);
   const [gameOver, setGameOver] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [explosions, setExplosions] = useState<Explosion[]>([]);
+  const [currentSkin, setCurrentSkin] = useState<string>('classic');
   const gameLoopRef = useRef<number | undefined>(undefined);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
+  
+  const skin = SKINS[currentSkin];
 
   const createNewPiece = useCallback(() => {
-    const pieceData = TETRIS_PIECES[Math.floor(Math.random() * TETRIS_PIECES.length)];
+    const pieceData = skin.pieces[Math.floor(Math.random() * skin.pieces.length)];
     return {
       shape: pieceData.shape,
       color: pieceData.color,
@@ -73,7 +200,7 @@ export default function TetrisComponent() {
         y: 0
       }
     };
-  }, []);
+  }, [skin]);
 
   const checkCollision = useCallback((piece: Piece, board: (string | null)[][], offsetX = 0, offsetY = 0) => {
     for (let y = 0; y < piece.shape.length; y++) {
@@ -230,16 +357,19 @@ export default function TetrisComponent() {
       setLines(prev => prev + linesCleared);
       setScore(prev => prev + linesCleared * 100 * level);
       
-      // Create new piece
-      const newPiece = nextPiece || createNewPiece();
-      if (checkCollision(newPiece, newBoard)) {
-        setGameOver(true);
-      } else {
-        setCurrentPiece(newPiece);
-        setNextPiece(createNewPiece());
+      // Get next piece from queue
+      if (nextPieces.length > 0) {
+        const newPiece = nextPieces[0];
+        if (checkCollision(newPiece, newBoard)) {
+          setGameOver(true);
+        } else {
+          setCurrentPiece(newPiece);
+          // Remove first piece and add new one to end
+          setNextPieces(prev => [...prev.slice(1), createNewPiece()]);
+        }
       }
     }
-  }, [currentPiece, board, gameOver, isPaused, checkCollision, mergePiece, clearLines, level, nextPiece, createNewPiece]);
+  }, [currentPiece, board, gameOver, isPaused, checkCollision, mergePiece, clearLines, level, nextPieces, createNewPiece]);
 
   const rotate = useCallback(() => {
     if (!currentPiece || gameOver || isPaused) return;
@@ -328,92 +458,177 @@ export default function TetrisComponent() {
 
   // Initialize game
   useEffect(() => {
+    const initialPieces = [createNewPiece(), createNewPiece(), createNewPiece()];
+    setNextPieces(initialPieces);
     setCurrentPiece(createNewPiece());
-    setNextPiece(createNewPiece());
   }, [createNewPiece]);
+
+  // Helper function to adjust color brightness
+  const adjustBrightness = (color: string, percent: number) => {
+    const num = parseInt(color.replace("#",""), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = (num >> 16) + amt;
+    const G = (num >> 8 & 0x00FF) + amt;
+    const B = (num & 0x0000FF) + amt;
+    return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+      (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+      (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+  };
 
   // Helper function to draw a 3D brick
   const draw3DBrick = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, color: string) => {
-    const depth = 6;
-    const lightness = 1.3;
-    const darkness = 0.7;
-    
-    // Convert hex to RGB for color manipulation
-    const hexToRgb = (hex: string) => {
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-      } : { r: 255, g: 255, b: 255 };
-    };
-    
-    const rgb = hexToRgb(color);
-    
-    const baseColor = color;
-    const topColor = `rgb(${Math.min(255, rgb.r * lightness)}, ${Math.min(255, rgb.g * lightness)}, ${Math.min(255, rgb.b * lightness)})`;
-    const rightColor = `rgb(${rgb.r * darkness}, ${rgb.g * darkness}, ${rgb.b * darkness})`;
-    
-    // Draw main face with subtle gradient
-    const gradient = ctx.createLinearGradient(x, y, x + width - depth, y + height - depth);
-    gradient.addColorStop(0, baseColor);
-    gradient.addColorStop(0.5, `rgba(255, 255, 255, 0.1)`);
-    gradient.addColorStop(1, baseColor);
-    ctx.fillStyle = baseColor;
-    ctx.fillRect(x, y, width - depth, height - depth);
-    
-    // Add subtle shine overlay
-    ctx.fillStyle = gradient;
-    ctx.fillRect(x, y, width - depth, height - depth);
-    
-    // Add glossy shine effect
-    const shineGradient = ctx.createLinearGradient(x, y, x, y + height/3);
-    shineGradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
-    shineGradient.addColorStop(1, 'transparent');
-    ctx.fillStyle = shineGradient;
-    ctx.fillRect(x, y, width - depth, height/3);
-    
-    // Draw top face (lighter)
-    ctx.fillStyle = topColor;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + depth, y - depth);
-    ctx.lineTo(x + width, y - depth);
-    ctx.lineTo(x + width - depth, y);
-    ctx.closePath();
-    ctx.fill();
-    
-    // Draw right face (darker)
-    ctx.fillStyle = rightColor;
-    ctx.beginPath();
-    ctx.moveTo(x + width - depth, y);
-    ctx.lineTo(x + width, y - depth);
-    ctx.lineTo(x + width, y + height - depth);
-    ctx.lineTo(x + width - depth, y + height - depth);
-    ctx.closePath();
-    ctx.fill();
-    
-    // Draw mortar lines for brick texture
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(x, y, width - depth, height - depth);
-    
-    // Add highlight
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x + 1, y + height - depth - 1);
-    ctx.lineTo(x + 1, y + 1);
-    ctx.lineTo(x + width - depth - 1, y + 1);
-    ctx.stroke();
-    
-    // Add shadow to make it pop more
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-    ctx.beginPath();
-    ctx.moveTo(x + width - depth - 1, y + 1);
-    ctx.lineTo(x + width - depth - 1, y + height - depth - 1);
-    ctx.lineTo(x + 1, y + height - depth - 1);
-    ctx.stroke();
+    if (skin.blockStyle === 'classic') {
+      const blockSize = width - 2;
+      const borderSize = 2;
+      
+      // Draw border
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(x, y, width, height);
+      
+      // Draw main block
+      ctx.fillStyle = color;
+      ctx.fillRect(x + borderSize, y + borderSize, blockSize - borderSize, blockSize - borderSize);
+      
+      // Draw inner highlight
+      ctx.fillStyle = adjustBrightness(color, 40);
+      ctx.fillRect(x + borderSize, y + borderSize, blockSize - borderSize - 4, 2);
+      ctx.fillRect(x + borderSize, y + borderSize, 2, blockSize - borderSize - 4);
+      
+      // Draw inner shadow
+      ctx.fillStyle = adjustBrightness(color, -40);
+      ctx.fillRect(x + blockSize - 2, y + borderSize + 2, 2, blockSize - borderSize - 2);
+      ctx.fillRect(x + borderSize + 2, y + blockSize - 2, blockSize - borderSize - 2, 2);
+    } else if (skin.blockStyle === 'modern') {
+      const depth = 3;
+      
+      // Main face
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, width - depth, height - depth);
+      
+      // Right side (darker)
+      ctx.fillStyle = adjustBrightness(color, -30);
+      ctx.beginPath();
+      ctx.moveTo(x + width - depth, y);
+      ctx.lineTo(x + width, y + depth);
+      ctx.lineTo(x + width, y + height);
+      ctx.lineTo(x + width - depth, y + height - depth);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Bottom side (darker)
+      ctx.fillStyle = adjustBrightness(color, -50);
+      ctx.beginPath();
+      ctx.moveTo(x, y + height - depth);
+      ctx.lineTo(x + depth, y + height);
+      ctx.lineTo(x + width, y + height);
+      ctx.lineTo(x + width - depth, y + height - depth);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Add highlight
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x + 1, y + height - depth - 1);
+      ctx.lineTo(x + 1, y + 1);
+      ctx.lineTo(x + width - depth - 1, y + 1);
+      ctx.stroke();
+    } else if (skin.blockStyle === 'neon') {
+      // Neon glow effect
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = color;
+      ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
+      
+      // Inner bright core
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = adjustBrightness(color, 50);
+      ctx.fillRect(x + 4, y + 4, width - 8, height - 8);
+      
+      // Outline
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + 1.5, y + 1.5, width - 3, height - 3);
+    } else if (skin.blockStyle === 'brick') {
+      // Brick texture effect
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, width, height);
+      
+      // Add texture with darker lines for mortar
+      ctx.strokeStyle = adjustBrightness(color, -40);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, width, height);
+      
+      // Add brick texture lines
+      ctx.beginPath();
+      // Horizontal mortar line in middle
+      ctx.moveTo(x, y + height / 2);
+      ctx.lineTo(x + width, y + height / 2);
+      // Vertical mortar lines
+      ctx.moveTo(x + width / 3, y);
+      ctx.lineTo(x + width / 3, y + height / 2);
+      ctx.moveTo(x + 2 * width / 3, y + height / 2);
+      ctx.lineTo(x + 2 * width / 3, y + height);
+      ctx.stroke();
+      
+      // Add subtle highlight
+      ctx.fillStyle = adjustBrightness(color, 20);
+      ctx.fillRect(x + 2, y + 2, width - 4, 3);
+      
+      // Add shadow
+      ctx.fillStyle = adjustBrightness(color, -20);
+      ctx.fillRect(x + 2, y + height - 3, width - 4, 2);
+    } else if (skin.blockStyle === 'glossy') {
+      // Glossy 3D rounded block effect
+      const radius = 4;
+      
+      // Draw rounded rectangle with gradient
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.arcTo(x + width, y, x + width, y + radius, radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+      ctx.lineTo(x + radius, y + height);
+      ctx.arcTo(x, y + height, x, y + height - radius, radius);
+      ctx.lineTo(x, y + radius);
+      ctx.arcTo(x, y, x + radius, y, radius);
+      ctx.closePath();
+      
+      // Create gradient for glossy effect
+      const gradient = ctx.createLinearGradient(x, y, x, y + height);
+      gradient.addColorStop(0, adjustBrightness(color, 40));
+      gradient.addColorStop(0.5, color);
+      gradient.addColorStop(1, adjustBrightness(color, -20));
+      
+      ctx.fillStyle = gradient;
+      ctx.fill();
+      
+      // Add highlight shine
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y + 2);
+      ctx.lineTo(x + width - radius, y + 2);
+      ctx.arcTo(x + width - 2, y + 2, x + width - 2, y + radius, radius);
+      ctx.lineTo(x + width - 2, y + height / 3);
+      ctx.quadraticCurveTo(x + width / 2, y + height / 3 + 4, x + 2, y + height / 3);
+      ctx.lineTo(x + 2, y + radius);
+      ctx.arcTo(x + 2, y + 2, x + radius, y + 2, radius);
+      ctx.closePath();
+      
+      const shineGradient = ctx.createLinearGradient(x, y, x, y + height / 2);
+      shineGradient.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+      shineGradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
+      ctx.fillStyle = shineGradient;
+      ctx.fill();
+      
+      // Add subtle inner shadow
+      ctx.strokeStyle = adjustBrightness(color, -30);
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      
+      ctx.restore();
+    }
   };
 
   // Animation loop for explosions
@@ -482,21 +697,32 @@ export default function TetrisComponent() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear canvas with vibrant gradient background
-    const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    bgGradient.addColorStop(0, '#1e3c72');
-    bgGradient.addColorStop(0.5, '#2a5298');
-    bgGradient.addColorStop(1, '#1e3c72');
-    ctx.fillStyle = bgGradient;
+    // Clear canvas with appropriate background
+    if (skin.background === 'gradient') {
+      const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      bgGradient.addColorStop(0, '#1e3c72');
+      bgGradient.addColorStop(0.5, '#2a5298');
+      bgGradient.addColorStop(1, '#1e3c72');
+      ctx.fillStyle = bgGradient;
+    } else {
+      ctx.fillStyle = skin.background;
+    }
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw board grid with subtle lines
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.lineWidth = 0.5;
-    for (let y = 0; y < BOARD_HEIGHT; y++) {
-      for (let x = 0; x < BOARD_WIDTH; x++) {
-        ctx.strokeRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-      }
+    // Draw board grid
+    ctx.strokeStyle = skin.gridColor;
+    ctx.lineWidth = skin.gridLineWidth;
+    for (let y = 0; y <= BOARD_HEIGHT; y++) {
+      ctx.beginPath();
+      ctx.moveTo(0, y * CELL_SIZE);
+      ctx.lineTo(BOARD_WIDTH * CELL_SIZE, y * CELL_SIZE);
+      ctx.stroke();
+    }
+    for (let x = 0; x <= BOARD_WIDTH; x++) {
+      ctx.beginPath();
+      ctx.moveTo(x * CELL_SIZE, 0);
+      ctx.lineTo(x * CELL_SIZE, BOARD_HEIGHT * CELL_SIZE);
+      ctx.stroke();
     }
 
     // Draw board cells as 3D bricks
@@ -647,7 +873,7 @@ export default function TetrisComponent() {
       ctx.textAlign = 'center';
       ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
     }
-  }, [board, currentPiece, gameOver, isPaused, checkCollision, explosions, draw3DBrick]);
+  }, [board, currentPiece, gameOver, isPaused, checkCollision, explosions, draw3DBrick, skin]);
 
   const resetGame = () => {
     setBoard(Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill(null)));
@@ -657,24 +883,31 @@ export default function TetrisComponent() {
     setGameOver(false);
     setIsPaused(false);
     setExplosions([]);
+    // Initialize with 3 pieces in queue
+    const initialPieces = [createNewPiece(), createNewPiece(), createNewPiece()];
+    setNextPieces(initialPieces);
     setCurrentPiece(createNewPiece());
-    setNextPiece(createNewPiece());
   };
 
-  const drawNextPiece = (canvas: HTMLCanvasElement | null) => {
-    if (!canvas || !nextPiece) return;
+  const drawNextPiece = useCallback((canvas: HTMLCanvasElement | null) => {
+    if (!canvas || nextPieces.length === 0) return;
     
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear with matching gradient background
-    const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    bgGradient.addColorStop(0, '#1e3c72');
-    bgGradient.addColorStop(1, '#2a5298');
-    ctx.fillStyle = bgGradient;
+    // Clear with appropriate background
+    if (skin.background === 'gradient') {
+      const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      bgGradient.addColorStop(0, '#1e3c72');
+      bgGradient.addColorStop(1, '#2a5298');
+      ctx.fillStyle = bgGradient;
+    } else {
+      ctx.fillStyle = skin.background;
+    }
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const cellSize = 22;
+    const nextPiece = nextPieces[0];
     const offsetX = (4 - nextPiece.shape[0].length) / 2;
     const offsetY = (4 - nextPiece.shape.length) / 2;
 
@@ -692,80 +925,177 @@ export default function TetrisComponent() {
         }
       }
     }
-  };
+  }, [nextPieces, draw3DBrick, skin]);
+
+  const drawSmallPiece = useCallback((canvas: HTMLCanvasElement | null, piece: Piece) => {
+    if (!canvas || !piece) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Clear with appropriate background
+    if (skin.background === 'gradient') {
+      const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      bgGradient.addColorStop(0, '#1e3c72');
+      bgGradient.addColorStop(1, '#2a5298');
+      ctx.fillStyle = bgGradient;
+    } else {
+      ctx.fillStyle = skin.background;
+    }
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const cellSize = 12;
+    const offsetX = (canvas.width / cellSize - piece.shape[0].length) / 2;
+    const offsetY = (canvas.height / cellSize - piece.shape.length) / 2;
+
+    for (let y = 0; y < piece.shape.length; y++) {
+      for (let x = 0; x < piece.shape[y].length; x++) {
+        if (piece.shape[y][x]) {
+          draw3DBrick(
+            ctx,
+            (offsetX + x) * cellSize,
+            (offsetY + y) * cellSize,
+            cellSize - 1,
+            cellSize - 1,
+            piece.color
+          );
+        }
+      }
+    }
+  }, [draw3DBrick, skin]);
 
   useEffect(() => {
     const nextCanvas = document.getElementById('next-piece-canvas') as HTMLCanvasElement;
     drawNextPiece(nextCanvas);
-  }, [nextPiece, drawNextPiece]);
+  }, [nextPieces, drawNextPiece, skin]);
+
+  // Draw all preview pieces
+  useEffect(() => {
+    nextPieces.forEach((piece, index) => {
+      const canvas = document.getElementById(`next-piece-${index}`) as HTMLCanvasElement;
+      drawSmallPiece(canvas, piece);
+    });
+  }, [nextPieces, drawSmallPiece]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-blue-900 flex flex-col items-center justify-center p-4">
-      <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-500 mb-4">TETRIS</h1>
+    <div className={`min-h-screen ${skin.name === 'Modern' ? 'bg-gradient-to-br from-blue-900 via-purple-900 to-blue-900' : skin.name === 'Neon' ? 'bg-gray-950' : skin.name === 'Brick Breaker' ? 'bg-stone-700' : skin.name === 'Glossy 3D' ? 'bg-slate-900' : 'bg-gray-900'} flex flex-col items-center justify-center p-4`}>
+      <h1 className={`text-6xl font-bold ${skin.name === 'Modern' ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-500' : skin.name === 'Neon' ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-pink-500 to-yellow-400' : skin.name === 'Brick Breaker' ? 'text-orange-300' : skin.name === 'Glossy 3D' ? 'text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-600' : 'text-white'} mb-6 tracking-wider`} style={{ fontFamily: skin.fontFamily }}>TETRIS</h1>
       
-      <div className="mb-4">
-        <Link href="/games" className="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all transform hover:scale-105">
-          ← Back to Games
+      <div className="mb-4 flex gap-4">
+        <Link href="/games" className={skin.buttonStyle} style={{ fontFamily: skin.fontFamily }}>
+          ← BACK TO GAMES
         </Link>
+        
+        <select 
+          value={currentSkin} 
+          onChange={(e) => setCurrentSkin(e.target.value)}
+          className={`${skin.buttonStyle} cursor-pointer`}
+          style={{ fontFamily: skin.fontFamily }}
+        >
+          {Object.entries(SKINS).map(([key, skinData]) => (
+            <option key={key} value={key}>{skinData.name}</option>
+          ))}
+        </select>
       </div>
       
       <div className="flex gap-8">
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-xl shadow-2xl border border-purple-500/30">
-          <canvas
-            ref={canvasRef}
-            width={BOARD_WIDTH * CELL_SIZE}
-            height={BOARD_HEIGHT * CELL_SIZE}
-            className="border-2 border-blue-500/50 rounded-lg"
-          />
+        <div>
+          {/* Next pieces preview above the board */}
+          <div className={`${skin.uiBackground} px-6 py-3 ${skin.uiBorder} mb-2 flex items-center justify-between`}>
+            <span className={`${skin.uiAccent} text-sm mr-4`} style={{ fontFamily: skin.fontFamily }}>
+              {skin.name === 'Modern' ? 'Upcoming:' : 'UPCOMING'} <span className="text-xs opacity-70">(click to swap)</span>
+            </span>
+            <div className="flex gap-3 items-center">
+              {nextPieces.map((piece, index) => (
+                <canvas
+                  key={index}
+                  id={`next-piece-${index}`}
+                  width={60}
+                  height={50}
+                  className={`cursor-pointer transition-transform hover:scale-110 ${
+                    skin.name === 'Modern' ? 'border border-blue-500/30 rounded' : 
+                    skin.name === 'Neon' ? 'border border-pink-500/30' : 
+                    skin.name === 'Brick Breaker' ? 'border border-stone-600' : 
+                    skin.name === 'Glossy 3D' ? 'border border-slate-600 rounded' : 
+                    'border border-gray-600'
+                  }`}
+                  onClick={() => {
+                    if (index > 0) {
+                      // Swap clicked piece with first piece
+                      setNextPieces(prev => {
+                        const newQueue = [...prev];
+                        [newQueue[0], newQueue[index]] = [newQueue[index], newQueue[0]];
+                        return newQueue;
+                      });
+                    }
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+          
+          <div className={`${skin.uiBackground} p-6 ${skin.uiBorder}`}>
+            <canvas
+              ref={canvasRef}
+              width={BOARD_WIDTH * CELL_SIZE}
+              height={BOARD_HEIGHT * CELL_SIZE}
+              className={skin.name === 'Modern' ? 'border-2 border-blue-500/50 rounded-lg' : skin.name === 'Neon' ? 'border-2 border-pink-500/50' : skin.name === 'Brick Breaker' ? 'border-4 border-stone-600' : skin.name === 'Glossy 3D' ? 'border-2 border-slate-600 rounded-lg' : 'border-2 border-gray-600'}
+            />
+          </div>
         </div>
 
         <div className="flex flex-col gap-4">
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-xl shadow-xl border border-purple-500/30">
-            <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 font-bold mb-2">Next Piece</h2>
+          <div className={`${skin.uiBackground} p-4 ${skin.uiBorder}`}>
+            <h2 className={`${skin.name === 'Modern' ? skin.uiAccent : skin.uiText} font-bold mb-2 text-center`} style={{ fontFamily: skin.fontFamily }}>{skin.name === 'Modern' ? 'Next Piece' : 'NEXT'}</h2>
             <canvas
               id="next-piece-canvas"
-              width={100}
-              height={100}
-              className="border border-blue-500/50 rounded"
+              width={120}
+              height={80}
+              className={skin.name === 'Modern' ? 'border border-blue-500/50 rounded' : skin.name === 'Neon' ? 'border-2 border-pink-500/50' : skin.name === 'Brick Breaker' ? 'border-2 border-stone-600' : skin.name === 'Glossy 3D' ? 'border border-slate-600 rounded' : 'border-2 border-gray-600 bg-black'}
             />
           </div>
 
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-xl shadow-xl text-white border border-purple-500/30">
-            <div className="mb-2 text-lg">
-              <span className="font-bold text-yellow-400">Score:</span> <span className="text-2xl">{score.toLocaleString()}</span>
+          <div className={`${skin.uiBackground} p-4 ${skin.uiBorder} ${skin.uiText}`} style={{ fontFamily: skin.fontFamily }}>
+            <div className="mb-3">
+              <div className={`${skin.uiAccent} text-sm`}>{skin.name === 'Modern' ? 'Score:' : 'SCORE'}</div>
+              <div className="text-2xl font-bold">{skin.name === 'Modern' ? score.toLocaleString() : score.toString().padStart(7, '0')}</div>
             </div>
-            <div className="mb-2 text-lg">
-              <span className="font-bold text-cyan-400">Lines:</span> <span className="text-2xl">{lines}</span>
+            <div className="mb-3">
+              <div className={`${skin.uiAccent} text-sm`}>{skin.name === 'Modern' ? 'Lines:' : 'LINES'}</div>
+              <div className="text-2xl font-bold">{skin.name === 'Modern' ? lines.toString() : lines.toString().padStart(7, '0')}</div>
             </div>
-            <div className="mb-4 text-lg">
-              <span className="font-bold text-pink-400">Level:</span> <span className="text-2xl">{level}</span>
+            <div className="mb-4">
+              <div className={`${skin.uiAccent} text-sm`}>{skin.name === 'Modern' ? 'Level:' : 'LEVEL'}</div>
+              <div className="text-2xl font-bold">{skin.name === 'Modern' ? level.toString() : level.toString().padStart(7, '0')}</div>
             </div>
 
             {gameOver && (
               <button
                 onClick={resetGame}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-2 px-4 rounded-lg w-full mb-2 shadow-lg transform transition-all hover:scale-105"
+                className={`${skin.buttonStyle} w-full mb-2`}
               >
-                New Game
+                {skin.name === 'Modern' ? 'New Game' : 'NEW GAME'}
               </button>
             )}
 
             <button
               onClick={() => setIsPaused(!isPaused)}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full shadow-lg transform transition-all hover:scale-105"
+              className={`${skin.buttonStyle} w-full disabled:opacity-50 disabled:cursor-not-allowed`}
               disabled={gameOver}
             >
-              {isPaused ? 'Resume' : 'Pause'}
+              {skin.name === 'Modern' ? (isPaused ? 'Resume' : 'Pause') : (isPaused ? 'RESUME' : 'PAUSE')}
             </button>
           </div>
 
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-xl shadow-xl text-white text-sm border border-purple-500/30">
-            <h3 className="font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">Controls:</h3>
-            <div className="text-gray-300">← → : Move</div>
-            <div className="text-gray-300">↓ : Soft Drop</div>
-            <div className="text-gray-300">↑ : Rotate</div>
-            <div className="text-gray-300">Space : Hard Drop</div>
-            <div className="text-gray-300">P : Pause</div>
+          <div className={`${skin.uiBackground} p-4 ${skin.uiBorder} ${skin.uiText} text-sm`} style={{ fontFamily: skin.fontFamily }}>
+            <h3 className={`font-bold mb-2 ${skin.name === 'Modern' ? skin.uiAccent : ''} text-center`}>{skin.name === 'Modern' ? 'Controls:' : 'CONTROLS'}</h3>
+            <div className={`${skin.uiAccent} space-y-1`}>
+              <div>← → : {skin.name === 'Modern' ? 'Move' : 'MOVE'}</div>
+              <div>↓ : {skin.name === 'Modern' ? 'Soft Drop' : 'SOFT DROP'}</div>
+              <div>↑ : {skin.name === 'Modern' ? 'Rotate' : 'ROTATE'}</div>
+              <div>{skin.name === 'Modern' ? 'Space' : 'SPACE'} : {skin.name === 'Modern' ? 'Hard Drop' : 'HARD DROP'}</div>
+              <div>P : {skin.name === 'Modern' ? 'Pause' : 'PAUSE'}</div>
+            </div>
           </div>
         </div>
       </div>
