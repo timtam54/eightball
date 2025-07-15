@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
+import MobileHelpDialog from "./MobileHelpDialog"
 
 interface Position {
   x: number
@@ -625,6 +626,8 @@ export default function TetrisComponent() {
   const [isPaused, setIsPaused] = useState(false)
   const [explosions, setExplosions] = useState<Explosion[]>([])
   const [currentSkin, setCurrentSkin] = useState<string>("blockblast")
+  const [showMobileHelp, setShowMobileHelp] = useState(false)
+  const [touchFeedback, setTouchFeedback] = useState<{ x: number; y: number; time: number } | null>(null)
 
   const gameLoopRef = useRef<number | undefined>(undefined)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -884,6 +887,63 @@ export default function TetrisComponent() {
     window.addEventListener("keydown", handleKeyPress)
     return () => window.removeEventListener("keydown", handleKeyPress)
   }, [movePiece, rotate, hardDrop, gameOver])
+
+  // Handle touch input for mobile
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas || !currentPiece) return
+
+    let lastTapTime = 0
+    const DOUBLE_TAP_DELAY = 300 // milliseconds
+
+    const handleTouch = (e: TouchEvent) => {
+      e.preventDefault()
+      if (gameOver || isPaused) return
+
+      const touch = e.touches[0]
+      const rect = canvas.getBoundingClientRect()
+      
+      // Convert touch coordinates to game board coordinates
+      const x = ((touch.clientX - rect.left) / rect.width) * BOARD_WIDTH
+      const y = ((touch.clientY - rect.top) / rect.height) * BOARD_HEIGHT
+
+      // Show touch feedback
+      setTouchFeedback({ x, y, time: Date.now() })
+      setTimeout(() => setTouchFeedback(null), 200) // Hide after 200ms
+
+      // Get piece center position
+      const pieceCenterX = currentPiece.position.x + currentPiece.shape[0].length / 2
+      const pieceCenterY = currentPiece.position.y + currentPiece.shape.length / 2
+
+      // Check for double tap for hard drop
+      const currentTime = Date.now()
+      const isDoubleTap = currentTime - lastTapTime < DOUBLE_TAP_DELAY
+      
+      // Determine action based on tap position relative to piece
+      if (y > pieceCenterY + 1) {
+        // Tap below piece
+        if (isDoubleTap) {
+          hardDrop()
+        } else {
+          movePiece(0, 1)
+        }
+      } else if (x < pieceCenterX - 1) {
+        // Tap to the left of piece
+        movePiece(-1, 0)
+      } else if (x > pieceCenterX + 1) {
+        // Tap to the right of piece
+        movePiece(1, 0)
+      } else {
+        // Tap on or near the piece - rotate
+        rotate()
+      }
+
+      lastTapTime = currentTime
+    }
+
+    canvas.addEventListener("touchstart", handleTouch)
+    return () => canvas.removeEventListener("touchstart", handleTouch)
+  }, [currentPiece, gameOver, isPaused, movePiece, rotate, hardDrop])
 
   // Game loop
   useEffect(() => {
@@ -1213,9 +1273,14 @@ export default function TetrisComponent() {
     }
   }
 
-  // Animation loop for explosions
+  // Animation loop for explosions and touch feedback
   useEffect(() => {
     const animate = () => {
+      // Force redraw when touch feedback is active
+      if (touchFeedback && Date.now() - touchFeedback.time < 200) {
+        // Touch feedback will be drawn in the main draw effect
+      }
+      
       setExplosions(
         (prev) =>
           prev
@@ -1266,7 +1331,7 @@ export default function TetrisComponent() {
       animationRef.current = requestAnimationFrame(animate)
     }
 
-    if (explosions.length > 0) {
+    if (explosions.length > 0 || (touchFeedback && Date.now() - touchFeedback.time < 200)) {
       animationRef.current = requestAnimationFrame(animate)
     }
 
@@ -1275,7 +1340,7 @@ export default function TetrisComponent() {
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [explosions.length])
+  }, [explosions.length, touchFeedback])
 
   // Draw game
   useEffect(() => {
@@ -1442,6 +1507,24 @@ export default function TetrisComponent() {
       })
     })
 
+    // Draw touch feedback
+    if (touchFeedback && Date.now() - touchFeedback.time < 200) {
+      const fadeOpacity = 1 - (Date.now() - touchFeedback.time) / 200
+      ctx.save()
+      ctx.globalAlpha = fadeOpacity * 0.5
+      ctx.fillStyle = "#ffffff"
+      ctx.beginPath()
+      ctx.arc(
+        touchFeedback.x * CELL_SIZE,
+        touchFeedback.y * CELL_SIZE,
+        20,
+        0,
+        Math.PI * 2
+      )
+      ctx.fill()
+      ctx.restore()
+    }
+
     // Draw game over overlay
     if (gameOver) {
       ctx.fillStyle = "rgba(0, 0, 0, 0.7)"
@@ -1461,7 +1544,7 @@ export default function TetrisComponent() {
       ctx.textAlign = "center"
       ctx.fillText("PAUSED", canvas.width / 2, canvas.height / 2)
     }
-  }, [board, currentPiece, gameOver, isPaused, checkCollision, explosions, skin])
+  }, [board, currentPiece, gameOver, isPaused, checkCollision, explosions, skin, touchFeedback])
 
   const drawNextPiece = useCallback(
     (canvas: HTMLCanvasElement | null) => {
@@ -1620,6 +1703,14 @@ export default function TetrisComponent() {
             </option>
           ))}
         </select>
+        <button
+          onClick={() => setShowMobileHelp(true)}
+          className={`${skin.buttonStyle} lg:hidden`}
+          style={{ fontFamily: skin.fontFamily }}
+          aria-label="Help for mobile controls"
+        >
+          ?
+        </button>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start">
@@ -1782,6 +1873,13 @@ export default function TetrisComponent() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Help Dialog */}
+      <MobileHelpDialog 
+        isOpen={showMobileHelp}
+        onClose={() => setShowMobileHelp(false)}
+        skin={skin}
+      />
     </div>
   )
 }
