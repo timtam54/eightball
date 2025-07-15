@@ -50,6 +50,77 @@ interface TetrisSkin {
 }
 
 const SKINS: { [key: string]: TetrisSkin } = {
+  blockblast: {
+    name: "Block Blast",
+    pieces: [
+      { shape: [[1, 1, 1, 1]], color: "#D4AF37" }, // I - Gold
+      {
+        shape: [
+          [1, 1],
+          [1, 1],
+        ],
+        color: "#DAA520",
+      }, // O - Goldenrod
+      {
+        shape: [
+          [0, 1, 0],
+          [1, 1, 1],
+        ],
+        color: "#B8860B",
+      }, // T - Dark Goldenrod
+      {
+        shape: [
+          [0, 1, 1],
+          [1, 1, 0],
+        ],
+        color: "#CD853F",
+      }, // S - Peru
+      {
+        shape: [
+          [1, 1, 0],
+          [0, 1, 1],
+        ],
+        color: "#DEB887",
+      }, // Z - Burlywood
+      {
+        shape: [
+          [1, 0, 0],
+          [1, 1, 1],
+        ],
+        color: "#F4A460",
+      }, // L - Sandy Brown
+      {
+        shape: [
+          [0, 0, 1],
+          [1, 1, 1],
+        ],
+        color: "#D2B48C",
+      }, // J - Tan
+    ],
+    background: "#2B4A7C", // Deep blue background like in screenshot
+    gridColor: "#1E3A5F", // Darker blue for grid lines
+    gridLineWidth: 1,
+    blockStyle: "retro",
+    uiBackground: "bg-slate-800",
+    uiBorder: "border-2 border-slate-600",
+    uiText: "text-white",
+    uiAccent: "text-blue-300",
+    fontFamily: "monospace",
+    buttonStyle: `
+      relative overflow-hidden
+      bg-gradient-to-b from-slate-400 via-slate-500 to-slate-700
+      hover:from-slate-300 hover:via-slate-400 hover:to-slate-600
+      text-white font-bold py-3 px-6
+      border-2 border-slate-300
+      shadow-[inset_2px_2px_4px_rgba(255,255,255,0.3),inset_-2px_-2px_4px_rgba(0,0,0,0.3),0_4px_8px_rgba(0,0,0,0.2)]
+      hover:shadow-[inset_2px_2px_4px_rgba(255,255,255,0.4),inset_-2px_-2px_4px_rgba(0,0,0,0.4),0_2px_4px_rgba(0,0,0,0.3)]
+      transform transition-all duration-150
+      hover:scale-[0.98] active:scale-[0.96]
+      uppercase tracking-wider text-sm
+      font-mono
+    `,
+    buttonHoverStyle: "hover:scale-[0.98] active:scale-[0.96]",
+  },
   classic: {
     name: "Classic",
     pieces: [
@@ -480,18 +551,18 @@ const SKINS: { [key: string]: TetrisSkin } = {
     uiAccent: "text-blue-300",
     fontFamily: "monospace",
     buttonStyle: `
-    relative overflow-hidden
-    bg-gradient-to-b from-slate-400 via-slate-500 to-slate-700
-    hover:from-slate-300 hover:via-slate-400 hover:to-slate-600
-    text-white font-bold py-3 px-6
-    border-2 border-slate-300
-    shadow-[inset_2px_2px_4px_rgba(255,255,255,0.3),inset_-2px_-2px_4px_rgba(0,0,0,0.3),0_4px_8px_rgba(0,0,0,0.2)]
-    hover:shadow-[inset_2px_2px_4px_rgba(255,255,255,0.4),inset_-2px_-2px_4px_rgba(0,0,0,0.4),0_2px_4px_rgba(0,0,0,0.3)]
-    transform transition-all duration-150
-    hover:scale-[0.98] active:scale-[0.96]
-    uppercase tracking-wider text-sm
-    font-mono
-  `,
+      relative overflow-hidden
+      bg-gradient-to-b from-slate-400 via-slate-500 to-slate-700
+      hover:from-slate-300 hover:via-slate-400 hover:to-slate-600
+      text-white font-bold py-3 px-6
+      border-2 border-slate-300
+      shadow-[inset_2px_2px_4px_rgba(255,255,255,0.3),inset_-2px_-2px_4px_rgba(0,0,0,0.3),0_4px_8px_rgba(0,0,0,0.2)]
+      hover:shadow-[inset_2px_2px_4px_rgba(255,255,255,0.4),inset_-2px_-2px_4px_rgba(0,0,0,0.4),0_2px_4px_rgba(0,0,0,0.3)]
+      transform transition-all duration-150
+      hover:scale-[0.98] active:scale-[0.96]
+      uppercase tracking-wider text-sm
+      font-mono
+    `,
     buttonHoverStyle: "hover:scale-[0.98] active:scale-[0.96]",
   },
 }
@@ -506,8 +577,8 @@ const createPrefilledBoard = () => {
     .fill(null)
     .map(() => Array(BOARD_WIDTH).fill(null))
 
-  // Colors to use for pre-filled blocks
-  const colors = ["#9370DB", "#DC143C", "#00BFFF", "#FFD700", "#32CD32", "#FF8C00"]
+  // Colors to use for pre-filled blocks - using golden/brown tones like Block Blast
+  const colors = ["#D4AF37", "#DAA520", "#B8860B", "#CD853F", "#DEB887", "#F4A460"]
 
   // Fill bottom half (rows 10-19) with blocks, leaving strategic gaps
   for (let y = 10; y < BOARD_HEIGHT; y++) {
@@ -533,8 +604,8 @@ const createPrefilledBoard = () => {
         (x === 15 && y === 11)
 
       if (!shouldBeEmpty) {
-        // Use different colors in a somewhat random but balanced way
-        const colorIndex = (x + y * 3) % colors.length
+        // Assign a fixed color that won't change - use a more random distribution
+        const colorIndex = Math.floor(Math.random() * colors.length)
         newBoard[y][x] = colors[colorIndex]
       }
     }
@@ -553,7 +624,7 @@ export default function TetrisComponent() {
   const [gameOver, setGameOver] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [explosions, setExplosions] = useState<Explosion[]>([])
-  const [currentSkin, setCurrentSkin] = useState<string>("shiny3d")
+  const [currentSkin, setCurrentSkin] = useState<string>("blockblast")
 
   const gameLoopRef = useRef<number | undefined>(undefined)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -579,6 +650,7 @@ export default function TetrisComponent() {
         if (piece.shape[y][x]) {
           const newX = piece.position.x + x + offsetX
           const newY = piece.position.y + y + offsetY
+
           if (newX < 0 || newX >= BOARD_WIDTH || newY >= BOARD_HEIGHT) {
             return true
           }
@@ -718,6 +790,7 @@ export default function TetrisComponent() {
         // Piece has landed
         const mergedBoard = mergePiece(currentPiece, board)
         const { newBoard, linesCleared } = clearLines(mergedBoard)
+
         setBoard(newBoard)
         setLines((prev) => prev + linesCleared)
         setScore((prev) => prev + linesCleared * 100 * level)
@@ -861,9 +934,7 @@ export default function TetrisComponent() {
     )
   }
 
-
   // Helper function to draw a 3D brick
-
   const resetGame = () => {
     setBoard(createPrefilledBoard()) // Changed from empty board
     setScore(0)
@@ -872,7 +943,6 @@ export default function TetrisComponent() {
     setGameOver(false)
     setIsPaused(false)
     setExplosions([])
-
     // Initialize with 3 pieces in queue
     const initialPieces = [createNewPiece(), createNewPiece(), createNewPiece()]
     setNextPieces(initialPieces)
@@ -1035,6 +1105,7 @@ export default function TetrisComponent() {
       ctx.strokeStyle = adjustBrightness(color, -30)
       ctx.lineWidth = 1
       ctx.stroke()
+
       ctx.restore()
     } else if (skin.blockStyle === "shiny3d") {
       // Ultra shiny chrome-like 3D effect
@@ -1210,7 +1281,6 @@ export default function TetrisComponent() {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
@@ -1227,7 +1297,7 @@ export default function TetrisComponent() {
       bgGradient.addColorStop(0, "#667eea")
       bgGradient.addColorStop(1, "#764ba2")
       ctx.fillStyle = bgGradient
-    } else if (skin.name === "Retro Arcade") {
+    } else if (skin.name === "Retro Arcade" || skin.name === "Block Blast") {
       // Simple solid background like in screenshot
       ctx.fillStyle = skin.background
       ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -1396,7 +1466,6 @@ export default function TetrisComponent() {
   const drawNextPiece = useCallback(
     (canvas: HTMLCanvasElement | null) => {
       if (!canvas || nextPieces.length === 0) return
-
       const ctx = canvas.getContext("2d")
       if (!ctx) return
 
@@ -1442,7 +1511,6 @@ export default function TetrisComponent() {
   const drawSmallPiece = useCallback(
     (canvas: HTMLCanvasElement | null, piece: Piece) => {
       if (!canvas || !piece) return
-
       const ctx = canvas.getContext("2d")
       if (!ctx) return
 
@@ -1510,7 +1578,7 @@ export default function TetrisComponent() {
                 ? "bg-slate-900"
                 : skin.name === "Shiny 3D Chrome"
                   ? "bg-gradient-to-br from-gray-800 via-purple-900 to-indigo-900"
-                  : skin.name === "Retro Arcade"
+                  : skin.name === "Retro Arcade" || skin.name === "Block Blast"
                     ? "bg-gradient-to-b from-purple-900 via-blue-900 to-black"
                     : "bg-gray-900"
       } flex flex-col items-center justify-center p-4`}
@@ -1527,7 +1595,7 @@ export default function TetrisComponent() {
                   ? "text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-600"
                   : skin.name === "Shiny 3D Chrome"
                     ? "text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-500 to-cyan-400"
-                    : skin.name === "Retro Arcade"
+                    : skin.name === "Retro Arcade" || skin.name === "Block Blast"
                       ? "text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-yellow-400 to-magenta-400 animate-pulse"
                       : "text-white"
         } mb-6 tracking-wider`}
@@ -1580,7 +1648,7 @@ export default function TetrisComponent() {
                             ? "border border-slate-600 rounded"
                             : skin.name === "Shiny 3D Chrome"
                               ? "border-2 border-yellow-400/50 rounded-lg shadow-[0_0_10px_rgba(255,215,0,0.3)]"
-                              : skin.name === "Retro Arcade"
+                              : skin.name === "Retro Arcade" || skin.name === "Block Blast"
                                 ? "border-2 border-cyan-400/70 shadow-[0_0_8px_rgba(0,255,255,0.3)]"
                                 : "border border-gray-600"
                   }`}
@@ -1615,7 +1683,7 @@ export default function TetrisComponent() {
                         ? "border-2 border-slate-600 rounded-lg"
                         : skin.name === "Shiny 3D Chrome"
                           ? "border-3 border-yellow-400/60 rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.4)]"
-                          : skin.name === "Retro Arcade"
+                          : skin.name === "Retro Arcade" || skin.name === "Block Blast"
                             ? "border-4 border-cyan-400 shadow-[0_0_15px_rgba(0,255,255,0.6)]"
                             : "border-2 border-gray-600"
               }
@@ -1646,7 +1714,7 @@ export default function TetrisComponent() {
                         ? "border border-slate-600 rounded"
                         : skin.name === "Shiny 3D Chrome"
                           ? "border-2 border-yellow-400/50 rounded-lg shadow-[0_0_10px_rgba(255,215,0,0.2)]"
-                          : skin.name === "Retro Arcade"
+                          : skin.name === "Retro Arcade" || skin.name === "Block Blast"
                             ? "border-3 border-cyan-400 shadow-[0_0_10px_rgba(0,255,255,0.4)]"
                             : "border-2 border-gray-600 bg-black"
               }
