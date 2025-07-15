@@ -1392,7 +1392,7 @@ export default function TetrisComponent() {
       for (let x = 0; x < BOARD_WIDTH; x++) {
         const cell = board[y][x]
         if (cell) {
-          draw3DBrick(ctx, x * CELL_SIZE + 2, y * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4, cell)
+          draw3DBrick(ctx, x * CELL_SIZE + 1, y * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2, cell)
         }
       }
     }
@@ -1404,10 +1404,10 @@ export default function TetrisComponent() {
           if (currentPiece.shape[y][x]) {
             draw3DBrick(
               ctx,
-              (currentPiece.position.x + x) * CELL_SIZE + 2,
-              (currentPiece.position.y + y) * CELL_SIZE + 2,
-              CELL_SIZE - 4,
-              CELL_SIZE - 4,
+              (currentPiece.position.x + x) * CELL_SIZE + 1,
+              (currentPiece.position.y + y) * CELL_SIZE + 1,
+              CELL_SIZE - 2,
+              CELL_SIZE - 2,
               currentPiece.color,
             )
           }
@@ -1427,10 +1427,10 @@ export default function TetrisComponent() {
             ctx.strokeStyle = currentPiece.color
             ctx.lineWidth = 2
             ctx.strokeRect(
-              (currentPiece.position.x + x) * CELL_SIZE + 2,
-              (ghostY + y) * CELL_SIZE + 2,
-              CELL_SIZE - 4,
-              CELL_SIZE - 4,
+              (currentPiece.position.x + x) * CELL_SIZE + 1,
+              (ghostY + y) * CELL_SIZE + 1,
+              CELL_SIZE - 2,
+              CELL_SIZE - 2,
             )
           }
         }
@@ -1578,10 +1578,10 @@ export default function TetrisComponent() {
           if (nextPiece.shape[y][x]) {
             draw3DBrick(
               ctx,
-              (offsetX + x) * cellSize + 6,
-              (offsetY + y) * cellSize + 6,
-              cellSize - 4,
-              cellSize - 4,
+              (offsetX + x) * cellSize + 2,
+              (offsetY + y) * cellSize + 2,
+              cellSize - 2,
+              cellSize - 2,
               nextPiece.color,
             )
           }
