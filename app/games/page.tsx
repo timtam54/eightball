@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import InstallPrompt from '../components/InstallPrompt';
 
 export default function GamesPage() {
   const [isClient, setIsClient] = useState(false);
@@ -139,6 +140,9 @@ export default function GamesPage() {
           </p>
         </footer>
       </div>
+
+      {/* Install Prompt */}
+      {isClient && <InstallPrompt />}
 
       <style jsx>{`
         @keyframes gradient {

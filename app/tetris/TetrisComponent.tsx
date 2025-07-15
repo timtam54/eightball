@@ -1584,7 +1584,7 @@ export default function TetrisComponent() {
       } flex flex-col items-center justify-center p-4`}
     >
       <h1
-        className={`text-6xl font-bold ${
+        className={`text-4xl lg:text-6xl font-bold ${
           skin.name === "Modern"
             ? "text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-500"
             : skin.name === "Neon"
@@ -1604,7 +1604,7 @@ export default function TetrisComponent() {
         TETRIS
       </h1>
 
-      <div className="mb-4 flex gap-4">
+      <div className="mb-4 flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto max-w-md">
         <Link href="/games" className={skin.buttonStyle} style={{ fontFamily: skin.fontFamily }}>
           ← BACK TO GAMES
         </Link>
@@ -1622,10 +1622,10 @@ export default function TetrisComponent() {
         </select>
       </div>
 
-      <div className="flex gap-8">
+      <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start">
         <div>
           {/* Next pieces preview above the board */}
-          <div className={`${skin.uiBackground} px-6 py-3 ${skin.uiBorder} mb-2 flex items-center justify-between`}>
+          <div className={`${skin.uiBackground} px-3 sm:px-6 py-3 ${skin.uiBorder} mb-2 flex flex-col sm:flex-row items-center sm:justify-between gap-2`}>
             <span className={`${skin.uiAccent} text-sm mr-4`} style={{ fontFamily: skin.fontFamily }}>
               {skin.name === "Modern" ? "Upcoming:" : "UPCOMING"}{" "}
               <span className="text-xs opacity-70">(click to swap)</span>
@@ -1667,12 +1667,13 @@ export default function TetrisComponent() {
             </div>
           </div>
 
-          <div className={`${skin.uiBackground} p-6 ${skin.uiBorder}`}>
-            <canvas
-              ref={canvasRef}
-              width={BOARD_WIDTH * CELL_SIZE} // This will now be 16 * 28 = 448px
-              height={BOARD_HEIGHT * CELL_SIZE}
-              className={
+          <div className={`${skin.uiBackground} p-3 lg:p-6 ${skin.uiBorder} max-w-full overflow-x-auto`}>
+            <div className="relative w-full max-w-[448px] mx-auto" style={{ aspectRatio: `${BOARD_WIDTH}/${BOARD_HEIGHT}` }}>
+              <canvas
+                ref={canvasRef}
+                width={BOARD_WIDTH * CELL_SIZE} // This will now be 16 * 28 = 448px
+                height={BOARD_HEIGHT * CELL_SIZE}
+                className={`w-full h-full ${
                 skin.name === "Modern"
                   ? "border-2 border-blue-500/50 rounded-lg"
                   : skin.name === "Neon"
@@ -1686,13 +1687,14 @@ export default function TetrisComponent() {
                           : skin.name === "Retro Arcade" || skin.name === "Block Blast"
                             ? "border-4 border-cyan-400 shadow-[0_0_15px_rgba(0,255,255,0.6)]"
                             : "border-2 border-gray-600"
-              }
-            />
+                }`}
+              />
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className={`${skin.uiBackground} p-4 ${skin.uiBorder}`}>
+        <div className="flex flex-row lg:flex-col gap-4 flex-wrap justify-center w-full lg:w-auto">
+          <div className={`${skin.uiBackground} p-4 ${skin.uiBorder} hidden lg:block`}>
             <h2
               className={`${skin.name === "Modern" ? skin.uiAccent : skin.uiText} font-bold mb-2 text-center`}
               style={{ fontFamily: skin.fontFamily }}
@@ -1722,25 +1724,27 @@ export default function TetrisComponent() {
           </div>
 
           <div
-            className={`${skin.uiBackground} p-4 ${skin.uiBorder} ${skin.uiText}`}
+            className={`${skin.uiBackground} p-4 ${skin.uiBorder} ${skin.uiText} flex-1 lg:flex-initial`}
             style={{ fontFamily: skin.fontFamily }}
           >
-            <div className="mb-3">
-              <div className={`${skin.uiAccent} text-sm`}>{skin.name === "Modern" ? "Score:" : "SCORE"}</div>
-              <div className="text-2xl font-bold">
-                {skin.name === "Modern" ? score.toLocaleString() : score.toString().padStart(7, "0")}
+            <div className="flex flex-row lg:flex-col gap-4 lg:gap-0">
+              <div className="flex-1 lg:mb-3">
+                <div className={`${skin.uiAccent} text-sm`}>{skin.name === "Modern" ? "Score:" : "SCORE"}</div>
+                <div className="text-xl lg:text-2xl font-bold">
+                  {skin.name === "Modern" ? score.toLocaleString() : score.toString().padStart(7, "0")}
+                </div>
               </div>
-            </div>
-            <div className="mb-3">
-              <div className={`${skin.uiAccent} text-sm`}>{skin.name === "Modern" ? "Lines:" : "LINES"}</div>
-              <div className="text-2xl font-bold">
-                {skin.name === "Modern" ? lines.toString() : lines.toString().padStart(7, "0")}
+              <div className="flex-1 lg:mb-3">
+                <div className={`${skin.uiAccent} text-sm`}>{skin.name === "Modern" ? "Lines:" : "LINES"}</div>
+                <div className="text-xl lg:text-2xl font-bold">
+                  {skin.name === "Modern" ? lines.toString() : lines.toString().padStart(7, "0")}
+                </div>
               </div>
-            </div>
-            <div className="mb-4">
-              <div className={`${skin.uiAccent} text-sm`}>{skin.name === "Modern" ? "Level:" : "LEVEL"}</div>
-              <div className="text-2xl font-bold">
-                {skin.name === "Modern" ? level.toString() : level.toString().padStart(7, "0")}
+              <div className="flex-1 lg:mb-4">
+                <div className={`${skin.uiAccent} text-sm`}>{skin.name === "Modern" ? "Level:" : "LEVEL"}</div>
+                <div className="text-xl lg:text-2xl font-bold">
+                  {skin.name === "Modern" ? level.toString() : level.toString().padStart(7, "0")}
+                </div>
               </div>
             </div>
 
@@ -1760,7 +1764,7 @@ export default function TetrisComponent() {
           </div>
 
           <div
-            className={`${skin.uiBackground} p-4 ${skin.uiBorder} ${skin.uiText} text-sm`}
+            className={`${skin.uiBackground} p-4 ${skin.uiBorder} ${skin.uiText} text-sm hidden lg:block`}
             style={{ fontFamily: skin.fontFamily }}
           >
             <h3 className={`font-bold mb-2 ${skin.name === "Modern" ? skin.uiAccent : ""} text-center`}>
