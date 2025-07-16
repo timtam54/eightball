@@ -100,7 +100,7 @@ const SKINS: { [key: string]: TetrisSkin } = {
     ],
     background: "#2B4A7C", // Deep blue background like in screenshot
     gridColor: "#1E3A5F", // Darker blue for grid lines
-    gridLineWidth: 1,
+    gridLineWidth: 0, // No grid lines for seamless look
     blockStyle: "retro",
     uiBackground: "bg-slate-800",
     uiBorder: "border-2 border-slate-600",
@@ -171,7 +171,7 @@ const SKINS: { [key: string]: TetrisSkin } = {
     ],
     background: "#000000",
     gridColor: "#222222",
-    gridLineWidth: 1,
+    gridLineWidth: 0, // No grid lines for seamless look
     blockStyle: "classic",
     uiBackground: "bg-black",
     uiBorder: "border-4 border-gray-700",
@@ -230,8 +230,8 @@ const SKINS: { [key: string]: TetrisSkin } = {
       }, // J - Royal Blue
     ],
     background: "gradient",
-    gridColor: "rgba(255, 255, 255, 0.1)",
-    gridLineWidth: 0.5,
+    gridColor: "rgba(255, 255, 255, 0.05)", // Very subtle grid
+    gridLineWidth: 0, // No grid lines for seamless look
     blockStyle: "modern",
     uiBackground: "bg-gradient-to-br from-gray-800 to-gray-900",
     uiBorder: "rounded-xl shadow-xl border border-purple-500/30",
@@ -291,7 +291,7 @@ const SKINS: { [key: string]: TetrisSkin } = {
     ],
     background: "#0a0a0a",
     gridColor: "#1a1a1a",
-    gridLineWidth: 1,
+    gridLineWidth: 0, // No grid lines for seamless look
     blockStyle: "neon",
     uiBackground: "bg-gray-950",
     uiBorder: "border-2 border-pink-500/50 shadow-[0_0_20px_rgba(236,72,153,0.5)]",
@@ -351,7 +351,7 @@ const SKINS: { [key: string]: TetrisSkin } = {
     ],
     background: "#696969",
     gridColor: "#4a4a4a",
-    gridLineWidth: 2,
+    gridLineWidth: 0, // No grid lines for seamless look
     blockStyle: "brick",
     uiBackground: "bg-stone-800",
     uiBorder: "border-4 border-stone-600 shadow-inner",
@@ -410,8 +410,8 @@ const SKINS: { [key: string]: TetrisSkin } = {
       }, // J - Turquoise
     ],
     background: "#2C3E50",
-    gridColor: "rgba(255, 255, 255, 0.05)",
-    gridLineWidth: 1,
+    gridColor: "rgba(255, 255, 255, 0.02)", // Very subtle grid
+    gridLineWidth: 0, // No grid lines for seamless look
     blockStyle: "glossy",
     uiBackground: "bg-slate-800",
     uiBorder: "rounded-2xl shadow-2xl border border-slate-600",
@@ -470,8 +470,8 @@ const SKINS: { [key: string]: TetrisSkin } = {
       }, // Royal Blue
     ],
     background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-    gridColor: "rgba(255, 255, 255, 0.15)",
-    gridLineWidth: 1,
+    gridColor: "rgba(255, 255, 255, 0.05)", // Very subtle grid
+    gridLineWidth: 0, // No grid lines for seamless look
     blockStyle: "shiny3d",
     uiBackground: "bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900",
     uiBorder: "rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] border-2 border-gray-500/30",
@@ -544,7 +544,7 @@ const SKINS: { [key: string]: TetrisSkin } = {
     ],
     background: "#2B4A7C", // Deep blue background like in screenshot
     gridColor: "#1E3A5F", // Darker blue for grid lines
-    gridLineWidth: 1,
+    gridLineWidth: 0, // No grid lines for seamless look
     blockStyle: "retro",
     uiBackground: "bg-slate-800",
     uiBorder: "border-2 border-slate-600",
@@ -569,40 +569,60 @@ const SKINS: { [key: string]: TetrisSkin } = {
 }
 
 const BOARD_WIDTH = 16 // Changed from 10
-const BOARD_HEIGHT = 20
+const BOARD_HEIGHT = 28 // Changed from 20 to make the box 8 bricks higher
 const CELL_SIZE = 28
 
+// Color schemes for Block Blast progression
+const BLOCK_BLAST_COLOR_SCHEMES = [
+  // Gold/Brown (original)
+  ["#D4AF37", "#DAA520", "#B8860B", "#CD853F", "#DEB887", "#F4A460"],
+  // Blue
+  ["#1E90FF", "#4169E1", "#0000CD", "#191970", "#6495ED", "#87CEEB"],
+  // Green
+  ["#32CD32", "#228B22", "#008000", "#006400", "#90EE90", "#98FB98"],
+  // Purple
+  ["#9370DB", "#8B008B", "#4B0082", "#6A0DAD", "#DA70D6", "#DDA0DD"],
+  // Red/Pink
+  ["#FF1493", "#DC143C", "#8B0000", "#FF69B4", "#FF6347", "#FFA07A"],
+  // Cyan/Teal
+  ["#00CED1", "#008B8B", "#20B2AA", "#48D1CC", "#40E0D0", "#00FFFF"],
+  // Orange
+  ["#FF8C00", "#FF6347", "#FF4500", "#FFA500", "#FFB347", "#FFCC99"],
+  // Rainbow (cycles through multiple bright colors)
+  ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#9400D3"],
+]
+
 // Helper function to create pre-filled board with worm holes
-const createPrefilledBoard = () => {
+const createPrefilledBoard = (colorSchemeIndex = 0) => {
   const newBoard = Array(BOARD_HEIGHT)
     .fill(null)
     .map(() => Array(BOARD_WIDTH).fill(null))
 
-  // Colors to use for pre-filled blocks - using golden/brown tones like Block Blast
-  const colors = ["#D4AF37", "#DAA520", "#B8860B", "#CD853F", "#DEB887", "#F4A460"]
+  // Use the appropriate color scheme
+  const colors = BLOCK_BLAST_COLOR_SCHEMES[colorSchemeIndex]
 
-  // Fill bottom half (rows 10-19) with blocks, leaving strategic gaps
-  for (let y = 10; y < BOARD_HEIGHT; y++) {
+  // Fill bottom half (rows 14-27) with blocks, leaving strategic gaps
+  for (let y = 14; y < BOARD_HEIGHT; y++) {
     for (let x = 0; x < BOARD_WIDTH; x++) {
       // Create worm hole patterns - strategic empty spaces
       const shouldBeEmpty =
         // Vertical channels
-        (x === 7 && y >= 12 && y <= 16) ||
-        (x === 8 && y >= 12 && y <= 16) ||
-        (x === 4 && y >= 14 && y <= 17) ||
-        (x === 12 && y >= 13 && y <= 18) ||
+        (x === 7 && y >= 16 && y <= 20) ||
+        (x === 8 && y >= 16 && y <= 20) ||
+        (x === 4 && y >= 18 && y <= 21) ||
+        (x === 12 && y >= 17 && y <= 22) ||
         // Horizontal gaps
-        (y === 15 && x >= 2 && x <= 5) ||
-        (y === 17 && x >= 9 && x <= 11) ||
-        (y === 13 && x >= 13 && x <= 15) ||
+        (y === 19 && x >= 2 && x <= 5) ||
+        (y === 21 && x >= 9 && x <= 11) ||
+        (y === 17 && x >= 13 && x <= 15) ||
         // Random scattered holes for variety
-        (x === 1 && y === 16) ||
-        (x === 6 && y === 18) ||
-        (x === 10 && y === 14) ||
-        (x === 14 && y === 16) ||
-        (x === 3 && y === 12) ||
-        (x === 11 && y === 19) ||
-        (x === 15 && y === 11)
+        (x === 1 && y === 20) ||
+        (x === 6 && y === 22) ||
+        (x === 10 && y === 18) ||
+        (x === 14 && y === 20) ||
+        (x === 3 && y === 16) ||
+        (x === 11 && y === 23) ||
+        (x === 15 && y === 15)
 
       if (!shouldBeEmpty) {
         // Assign a fixed color that won't change - use a more random distribution
@@ -616,7 +636,7 @@ const createPrefilledBoard = () => {
 }
 
 export default function TetrisComponent() {
-  const [board, setBoard] = useState<(string | null)[][]>(() => createPrefilledBoard())
+  const [board, setBoard] = useState<(string | null)[][]>(() => createPrefilledBoard(0))
   const [currentPiece, setCurrentPiece] = useState<Piece | null>(null)
   const [nextPieces, setNextPieces] = useState<Piece[]>([])
   const [score, setScore] = useState(0)
@@ -628,6 +648,7 @@ export default function TetrisComponent() {
   const [currentSkin, setCurrentSkin] = useState<string>("blockblast")
   const [showMobileHelp, setShowMobileHelp] = useState(false)
   const [touchFeedback, setTouchFeedback] = useState<{ x: number; y: number; time: number } | null>(null)
+  const [blockBlastColorIndex, setBlockBlastColorIndex] = useState(0)
 
   const gameLoopRef = useRef<number | undefined>(undefined)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -637,15 +658,22 @@ export default function TetrisComponent() {
 
   const createNewPiece = useCallback(() => {
     const pieceData = skin.pieces[Math.floor(Math.random() * skin.pieces.length)]
+    // For Block Blast skin, use colors from the current color scheme
+    let pieceColor = pieceData.color
+    if (currentSkin === "blockblast") {
+      const currentColorScheme = BLOCK_BLAST_COLOR_SCHEMES[blockBlastColorIndex]
+      pieceColor = currentColorScheme[Math.floor(Math.random() * currentColorScheme.length)]
+    }
+
     return {
       shape: pieceData.shape,
-      color: pieceData.color,
+      color: pieceColor,
       position: {
         x: Math.floor((BOARD_WIDTH - pieceData.shape[0].length) / 2),
         y: 0,
       },
     }
-  }, [skin])
+  }, [skin, currentSkin, blockBlastColorIndex])
 
   const checkCollision = useCallback((piece: Piece, board: (string | null)[][], offsetX = 0, offsetY = 0) => {
     for (let y = 0; y < piece.shape.length; y++) {
@@ -754,6 +782,7 @@ export default function TetrisComponent() {
     (board: (string | null)[][]) => {
       let linesCleared = 0
       const clearedRows: { row: number; colors: string[] }[] = []
+
       const newBoard = board.filter((row, index) => {
         const isComplete = row.every((cell) => cell !== null)
         if (isComplete) {
@@ -794,7 +823,25 @@ export default function TetrisComponent() {
         const mergedBoard = mergePiece(currentPiece, board)
         const { newBoard, linesCleared } = clearLines(mergedBoard)
 
-        setBoard(newBoard)
+        // For Block Blast skin, change colors when lines are cleared
+        let finalBoard = newBoard
+        if (currentSkin === "blockblast" && linesCleared > 0) {
+          setBlockBlastColorIndex((prev) => (prev + 1) % BLOCK_BLAST_COLOR_SCHEMES.length)
+          // Update all existing blocks with new color scheme
+          const newColorScheme =
+            BLOCK_BLAST_COLOR_SCHEMES[(blockBlastColorIndex + 1) % BLOCK_BLAST_COLOR_SCHEMES.length]
+          finalBoard = newBoard.map((row) =>
+            row.map((cell) => {
+              if (cell) {
+                // Assign a random color from the new scheme
+                return newColorScheme[Math.floor(Math.random() * newColorScheme.length)]
+              }
+              return cell
+            }),
+          )
+        }
+
+        setBoard(finalBoard)
         setLines((prev) => prev + linesCleared)
         setScore((prev) => prev + linesCleared * 100 * level)
 
@@ -822,6 +869,8 @@ export default function TetrisComponent() {
       level,
       nextPieces,
       createNewPiece,
+      currentSkin,
+      blockBlastColorIndex,
     ],
   )
 
@@ -902,7 +951,7 @@ export default function TetrisComponent() {
 
       const touch = e.touches[0]
       const rect = canvas.getBoundingClientRect()
-      
+
       // Convert touch coordinates to game board coordinates
       const x = ((touch.clientX - rect.left) / rect.width) * BOARD_WIDTH
       const y = ((touch.clientY - rect.top) / rect.height) * BOARD_HEIGHT
@@ -918,7 +967,7 @@ export default function TetrisComponent() {
       // Check for double tap for hard drop
       const currentTime = Date.now()
       const isDoubleTap = currentTime - lastTapTime < DOUBLE_TAP_DELAY
-      
+
       // Determine action based on tap position relative to piece
       if (y > pieceCenterY + 1) {
         // Tap below piece
@@ -996,7 +1045,8 @@ export default function TetrisComponent() {
 
   // Helper function to draw a 3D brick
   const resetGame = () => {
-    setBoard(createPrefilledBoard()) // Changed from empty board
+    setBlockBlastColorIndex(0) // Reset color scheme to gold
+    setBoard(createPrefilledBoard(0)) // Start with gold color scheme
     setScore(0)
     setLines(0)
     setLevel(1)
@@ -1018,29 +1068,20 @@ export default function TetrisComponent() {
     color: string,
   ) => {
     if (skin.blockStyle === "classic") {
-      const blockSize = width - 2
-      const borderSize = 2
-
-      // Draw border
-      ctx.fillStyle = "#000000"
+      // Simple flat blocks that touch each other
+      ctx.fillStyle = color
       ctx.fillRect(x, y, width, height)
 
-      // Draw main block
-      ctx.fillStyle = color
-      ctx.fillRect(x + borderSize, y + borderSize, blockSize - borderSize, blockSize - borderSize)
-
-      // Draw inner highlight
+      // Add subtle inner highlight and shadow for depth
       ctx.fillStyle = adjustBrightness(color, 40)
-      ctx.fillRect(x + borderSize, y + borderSize, blockSize - borderSize - 4, 2)
-      ctx.fillRect(x + borderSize, y + borderSize, 2, blockSize - borderSize - 4)
+      ctx.fillRect(x, y, width, 2)
+      ctx.fillRect(x, y, 2, height)
 
-      // Draw inner shadow
       ctx.fillStyle = adjustBrightness(color, -40)
-      ctx.fillRect(x + blockSize - 2, y + borderSize + 2, 2, blockSize - borderSize - 2)
-      ctx.fillRect(x + borderSize + 2, y + blockSize - 2, blockSize - borderSize - 2, 2)
+      ctx.fillRect(x + width - 2, y + 2, 2, height - 2)
+      ctx.fillRect(x + 2, y + height - 2, width - 2, 2)
     } else if (skin.blockStyle === "modern") {
-      const depth = 3
-
+      const depth = 2
       // Main face
       ctx.fillStyle = color
       ctx.fillRect(x, y, width - depth, height - depth)
@@ -1076,30 +1117,22 @@ export default function TetrisComponent() {
     } else if (skin.blockStyle === "neon") {
       // Neon glow effect
       ctx.shadowColor = color
-      ctx.shadowBlur = 10
+      ctx.shadowBlur = 8
       ctx.fillStyle = color
-      ctx.fillRect(x + 2, y + 2, width - 4, height - 4)
+      ctx.fillRect(x, y, width, height)
 
       // Inner bright core
       ctx.shadowBlur = 0
       ctx.fillStyle = adjustBrightness(color, 50)
-      ctx.fillRect(x + 4, y + 4, width - 8, height - 8)
-
-      // Outline
-      ctx.strokeStyle = color
-      ctx.lineWidth = 1
-      ctx.strokeRect(x + 1.5, y + 1.5, width - 3, height - 3)
+      ctx.fillRect(x + 2, y + 2, width - 4, height - 4)
     } else if (skin.blockStyle === "brick") {
-      // Brick texture effect
+      // Brick texture effect - seamless
       ctx.fillStyle = color
       ctx.fillRect(x, y, width, height)
 
-      // Add texture with darker lines for mortar
-      ctx.strokeStyle = adjustBrightness(color, -40)
-      ctx.lineWidth = 2
-      ctx.strokeRect(x, y, width, height)
-
-      // Add brick texture lines
+      // Add subtle texture lines
+      ctx.strokeStyle = adjustBrightness(color, -20)
+      ctx.lineWidth = 1
       ctx.beginPath()
       // Horizontal mortar line in middle
       ctx.moveTo(x, y + height / 2)
@@ -1112,29 +1145,12 @@ export default function TetrisComponent() {
       ctx.stroke()
 
       // Add subtle highlight
-      ctx.fillStyle = adjustBrightness(color, 20)
-      ctx.fillRect(x + 2, y + 2, width - 4, 3)
-
-      // Add shadow
-      ctx.fillStyle = adjustBrightness(color, -20)
-      ctx.fillRect(x + 2, y + height - 3, width - 4, 2)
+      ctx.fillStyle = adjustBrightness(color, 15)
+      ctx.fillRect(x + 1, y + 1, width - 2, 2)
     } else if (skin.blockStyle === "glossy") {
-      // Glossy 3D rounded block effect
-      const radius = 4
-
-      // Draw rounded rectangle with gradient
-      ctx.save()
-      ctx.beginPath()
-      ctx.moveTo(x + radius, y)
-      ctx.lineTo(x + width - radius, y)
-      ctx.arcTo(x + width, y, x + width, y + radius, radius)
-      ctx.lineTo(x + width, y + height - radius)
-      ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius)
-      ctx.lineTo(x + radius, y + height)
-      ctx.arcTo(x, y + height, x, y + height - radius, radius)
-      ctx.lineTo(x, y + radius)
-      ctx.arcTo(x, y, x + radius, y, radius)
-      ctx.closePath()
+      // Glossy blocks that touch seamlessly
+      ctx.fillStyle = color
+      ctx.fillRect(x, y, width, height)
 
       // Create gradient for glossy effect
       const gradient = ctx.createLinearGradient(x, y, x, y + height)
@@ -1142,50 +1158,18 @@ export default function TetrisComponent() {
       gradient.addColorStop(0.5, color)
       gradient.addColorStop(1, adjustBrightness(color, -20))
       ctx.fillStyle = gradient
-      ctx.fill()
+      ctx.fillRect(x, y, width, height)
 
       // Add highlight shine
-      ctx.beginPath()
-      ctx.moveTo(x + radius, y + 2)
-      ctx.lineTo(x + width - radius, y + 2)
-      ctx.arcTo(x + width - 2, y + 2, x + width - 2, y + radius, radius)
-      ctx.lineTo(x + width - 2, y + height / 3)
-      ctx.quadraticCurveTo(x + width / 2, y + height / 3 + 4, x + 2, y + height / 3)
-      ctx.lineTo(x + 2, y + radius)
-      ctx.arcTo(x + 2, y + 2, x + radius, y + 2, radius)
-      ctx.closePath()
-
       const shineGradient = ctx.createLinearGradient(x, y, x, y + height / 2)
-      shineGradient.addColorStop(0, "rgba(255, 255, 255, 0.5)")
+      shineGradient.addColorStop(0, "rgba(255, 255, 255, 0.4)")
       shineGradient.addColorStop(1, "rgba(255, 255, 255, 0.1)")
       ctx.fillStyle = shineGradient
-      ctx.fill()
-
-      // Add subtle inner shadow
-      ctx.strokeStyle = adjustBrightness(color, -30)
-      ctx.lineWidth = 1
-      ctx.stroke()
-
-      ctx.restore()
+      ctx.fillRect(x, y, width, height / 3)
     } else if (skin.blockStyle === "shiny3d") {
-      // Ultra shiny chrome-like 3D effect
-      const radius = 6
-      const depth = 4
-
-      ctx.save()
-
-      // Create rounded rectangle path
-      ctx.beginPath()
-      ctx.moveTo(x + radius, y)
-      ctx.lineTo(x + width - radius, y)
-      ctx.arcTo(x + width, y, x + width, y + radius, radius)
-      ctx.lineTo(x + width, y + height - radius)
-      ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius)
-      ctx.lineTo(x + radius, y + height)
-      ctx.arcTo(x, y + height, x, y + height - radius, radius)
-      ctx.lineTo(x, y + radius)
-      ctx.arcTo(x, y, x + radius, y, radius)
-      ctx.closePath()
+      // Ultra shiny chrome-like 3D effect - seamless
+      ctx.fillStyle = color
+      ctx.fillRect(x, y, width, height)
 
       // Main chrome gradient
       const chromeGradient = ctx.createLinearGradient(x, y, x, y + height)
@@ -1196,80 +1180,39 @@ export default function TetrisComponent() {
       chromeGradient.addColorStop(0.9, adjustBrightness(color, -40))
       chromeGradient.addColorStop(1, adjustBrightness(color, -60))
       ctx.fillStyle = chromeGradient
-      ctx.fill()
+      ctx.fillRect(x, y, width, height)
 
       // Top highlight shine
-      ctx.beginPath()
-      ctx.moveTo(x + radius, y + 2)
-      ctx.lineTo(x + width - radius, y + 2)
-      ctx.arcTo(x + width - 2, y + 2, x + width - 2, y + radius, radius)
-      ctx.lineTo(x + width - 2, y + height * 0.4)
-      ctx.quadraticCurveTo(x + width / 2, y + height * 0.5, x + 2, y + height * 0.4)
-      ctx.lineTo(x + 2, y + radius)
-      ctx.arcTo(x + 2, y + 2, x + radius, y + 2, radius)
-      ctx.closePath()
-
       const topShine = ctx.createLinearGradient(x, y, x, y + height * 0.5)
-      topShine.addColorStop(0, "rgba(255, 255, 255, 0.9)")
-      topShine.addColorStop(0.5, "rgba(255, 255, 255, 0.4)")
+      topShine.addColorStop(0, "rgba(255, 255, 255, 0.8)")
+      topShine.addColorStop(0.5, "rgba(255, 255, 255, 0.3)")
       topShine.addColorStop(1, "rgba(255, 255, 255, 0.1)")
       ctx.fillStyle = topShine
-      ctx.fill()
+      ctx.fillRect(x, y, width, height * 0.4)
 
       // Bottom reflection
-      ctx.beginPath()
-      ctx.moveTo(x + 2, y + height * 0.6)
-      ctx.quadraticCurveTo(x + width / 2, y + height * 0.7, x + width - 2, y + height * 0.6)
-      ctx.lineTo(x + width - 2, y + height - radius)
-      ctx.arcTo(x + width - 2, y + height - 2, x + width - radius, y + height - 2, radius)
-      ctx.lineTo(x + radius, y + height - 2)
-      ctx.arcTo(x + 2, y + height - 2, x + 2, y + height - radius, radius)
-      ctx.closePath()
-
       const bottomReflection = ctx.createLinearGradient(x, y + height * 0.6, x, y + height)
       bottomReflection.addColorStop(0, "rgba(255, 255, 255, 0.1)")
-      bottomReflection.addColorStop(0.5, "rgba(255, 255, 255, 0.3)")
-      bottomReflection.addColorStop(1, "rgba(255, 255, 255, 0.6)")
+      bottomReflection.addColorStop(0.5, "rgba(255, 255, 255, 0.2)")
+      bottomReflection.addColorStop(1, "rgba(255, 255, 255, 0.4)")
       ctx.fillStyle = bottomReflection
-      ctx.fill()
-
-      // Outer glow/shadow
-      ctx.shadowColor = "rgba(0, 0, 0, 0.5)"
-      ctx.shadowBlur = 8
-      ctx.shadowOffsetX = 2
-      ctx.shadowOffsetY = 2
-      ctx.strokeStyle = adjustBrightness(color, -50)
-      ctx.lineWidth = 1
-      ctx.stroke()
-
-      ctx.restore()
+      ctx.fillRect(x, y + height * 0.6, width, height * 0.4)
     } else if (skin.blockStyle === "retro") {
-      // Classic 3D beveled blocks like in the screenshot
-      const bevelSize = 3
-
+      // Classic 3D beveled blocks - seamless
+      const bevelSize = 2
       // Main block color
       ctx.fillStyle = color
       ctx.fillRect(x, y, width, height)
 
       // Top highlight (bright)
-      ctx.fillStyle = adjustBrightness(color, 50)
+      ctx.fillStyle = adjustBrightness(color, 40)
       ctx.fillRect(x, y, width, bevelSize) // Top edge
       ctx.fillRect(x, y, bevelSize, height) // Left edge
 
       // Bottom shadow (dark)
-      ctx.fillStyle = adjustBrightness(color, -50)
+      ctx.fillStyle = adjustBrightness(color, -40)
       ctx.fillRect(x, y + height - bevelSize, width, bevelSize) // Bottom edge
       ctx.fillRect(x + width - bevelSize, y, bevelSize, height) // Right edge
-
-      // Inner highlight (subtle)
-      ctx.fillStyle = adjustBrightness(color, 25)
-      ctx.fillRect(x + bevelSize, y + bevelSize, width - bevelSize * 2, 1) // Inner top
-      ctx.fillRect(x + bevelSize, y + bevelSize, 1, height - bevelSize * 2) // Inner left
-
-      // Inner shadow (subtle)
-      ctx.fillStyle = adjustBrightness(color, -25)
-      ctx.fillRect(x + bevelSize, y + height - bevelSize - 1, width - bevelSize * 2, 1) // Inner bottom
-      ctx.fillRect(x + width - bevelSize - 1, y + bevelSize, 1, height - bevelSize * 2) // Inner right
     }
   }
 
@@ -1280,7 +1223,7 @@ export default function TetrisComponent() {
       if (touchFeedback && Date.now() - touchFeedback.time < 200) {
         // Touch feedback will be drawn in the main draw effect
       }
-      
+
       setExplosions(
         (prev) =>
           prev
@@ -1371,43 +1314,45 @@ export default function TetrisComponent() {
     }
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // Draw board grid
-    ctx.strokeStyle = skin.gridColor
-    ctx.lineWidth = skin.gridLineWidth
-    for (let y = 0; y <= BOARD_HEIGHT; y++) {
-      ctx.beginPath()
-      ctx.moveTo(0, y * CELL_SIZE)
-      ctx.lineTo(BOARD_WIDTH * CELL_SIZE, y * CELL_SIZE)
-      ctx.stroke()
-    }
-    for (let x = 0; x <= BOARD_WIDTH; x++) {
-      ctx.beginPath()
-      ctx.moveTo(x * CELL_SIZE, 0)
-      ctx.lineTo(x * CELL_SIZE, BOARD_HEIGHT * CELL_SIZE)
-      ctx.stroke()
+    // Draw board grid (only if gridLineWidth > 0)
+    if (skin.gridLineWidth > 0) {
+      ctx.strokeStyle = skin.gridColor
+      ctx.lineWidth = skin.gridLineWidth
+      for (let y = 0; y <= BOARD_HEIGHT; y++) {
+        ctx.beginPath()
+        ctx.moveTo(0, y * CELL_SIZE)
+        ctx.lineTo(BOARD_WIDTH * CELL_SIZE, y * CELL_SIZE)
+        ctx.stroke()
+      }
+      for (let x = 0; x <= BOARD_WIDTH; x++) {
+        ctx.beginPath()
+        ctx.moveTo(x * CELL_SIZE, 0)
+        ctx.lineTo(x * CELL_SIZE, BOARD_HEIGHT * CELL_SIZE)
+        ctx.stroke()
+      }
     }
 
-    // Draw board cells as 3D bricks
+    // Draw board cells as 3D bricks - now touching each other
     for (let y = 0; y < BOARD_HEIGHT; y++) {
       for (let x = 0; x < BOARD_WIDTH; x++) {
         const cell = board[y][x]
         if (cell) {
-          draw3DBrick(ctx, x * CELL_SIZE + 1, y * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2, cell)
+          draw3DBrick(ctx, x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, cell)
         }
       }
     }
 
-    // Draw current piece as 3D bricks
+    // Draw current piece as 3D bricks - now touching each other
     if (currentPiece && !gameOver) {
       for (let y = 0; y < currentPiece.shape.length; y++) {
         for (let x = 0; x < currentPiece.shape[y].length; x++) {
           if (currentPiece.shape[y][x]) {
             draw3DBrick(
               ctx,
-              (currentPiece.position.x + x) * CELL_SIZE + 1,
-              (currentPiece.position.y + y) * CELL_SIZE + 1,
-              CELL_SIZE - 2,
-              CELL_SIZE - 2,
+              (currentPiece.position.x + x) * CELL_SIZE,
+              (currentPiece.position.y + y) * CELL_SIZE,
+              CELL_SIZE,
+              CELL_SIZE,
               currentPiece.color,
             )
           }
@@ -1426,12 +1371,7 @@ export default function TetrisComponent() {
           if (currentPiece.shape[y][x]) {
             ctx.strokeStyle = currentPiece.color
             ctx.lineWidth = 2
-            ctx.strokeRect(
-              (currentPiece.position.x + x) * CELL_SIZE + 1,
-              (ghostY + y) * CELL_SIZE + 1,
-              CELL_SIZE - 2,
-              CELL_SIZE - 2,
-            )
+            ctx.strokeRect((currentPiece.position.x + x) * CELL_SIZE, (ghostY + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE)
           }
         }
       }
@@ -1478,27 +1418,22 @@ export default function TetrisComponent() {
           // Draw brick fragments with rotation
           ctx.translate(particle.x, particle.y)
           ctx.rotate(particle.rotation)
-
           // Draw a small 3D brick fragment
           const fragmentSize = particle.size
           draw3DBrick(ctx, -fragmentSize / 2, -fragmentSize / 2, fragmentSize, fragmentSize, particle.color)
-
           ctx.rotate(-particle.rotation)
           ctx.translate(-particle.x, -particle.y)
         } else {
           // Draw small fragments
           ctx.translate(particle.x, particle.y)
           ctx.rotate(particle.rotation)
-
           // Fragment with some shading
           const halfSize = particle.size / 2
           ctx.fillStyle = particle.color
           ctx.fillRect(-halfSize, -halfSize, particle.size, particle.size)
-
           // Add slight highlight
           ctx.fillStyle = `rgba(255, 255, 255, ${particle.life * 0.3})`
           ctx.fillRect(-halfSize, -halfSize, particle.size * 0.3, particle.size * 0.3)
-
           ctx.rotate(-particle.rotation)
           ctx.translate(-particle.x, -particle.y)
         }
@@ -1514,13 +1449,7 @@ export default function TetrisComponent() {
       ctx.globalAlpha = fadeOpacity * 0.5
       ctx.fillStyle = "#ffffff"
       ctx.beginPath()
-      ctx.arc(
-        touchFeedback.x * CELL_SIZE,
-        touchFeedback.y * CELL_SIZE,
-        20,
-        0,
-        Math.PI * 2
-      )
+      ctx.arc(touchFeedback.x * CELL_SIZE, touchFeedback.y * CELL_SIZE, 20, 0, Math.PI * 2)
       ctx.fill()
       ctx.restore()
     }
@@ -1688,9 +1617,19 @@ export default function TetrisComponent() {
       </h1>
 
       <div className="mb-4 flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto max-w-md">
-        <Link href="/games" className={skin.buttonStyle} style={{ fontFamily: skin.fontFamily }}>
+        <div className="flex justify-between item-center">
+        <Link href="/games" className={`${skin.buttonStyle} w-full`} style={{ fontFamily: skin.fontFamily }}>
           ← BACK TO GAMES
         </Link>
+        <button
+          onClick={() => setShowMobileHelp(true)}
+          className={`${skin.buttonStyle} lg:hidden`}
+          style={{ fontFamily: skin.fontFamily }}
+          aria-label="Help for mobile controls"
+        >
+          ?
+        </button>
+        </div>
         <select
           value={currentSkin}
           onChange={(e) => setCurrentSkin(e.target.value)}
@@ -1703,20 +1642,14 @@ export default function TetrisComponent() {
             </option>
           ))}
         </select>
-        <button
-          onClick={() => setShowMobileHelp(true)}
-          className={`${skin.buttonStyle} lg:hidden`}
-          style={{ fontFamily: skin.fontFamily }}
-          aria-label="Help for mobile controls"
-        >
-          ?
-        </button>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start">
         <div>
           {/* Next pieces preview above the board */}
-          <div className={`${skin.uiBackground} px-3 sm:px-6 py-3 ${skin.uiBorder} mb-2 flex flex-col sm:flex-row items-center sm:justify-between gap-2`}>
+          <div
+            className={`${skin.uiBackground} px-3 sm:px-6 py-3 ${skin.uiBorder} mb-2 flex flex-col sm:flex-row items-center sm:justify-between gap-2`}
+          >
             <span className={`${skin.uiAccent} text-sm mr-4`} style={{ fontFamily: skin.fontFamily }}>
               {skin.name === "Modern" ? "Upcoming:" : "UPCOMING"}{" "}
               <span className="text-xs opacity-70">(click to swap)</span>
@@ -1759,25 +1692,28 @@ export default function TetrisComponent() {
           </div>
 
           <div className={`${skin.uiBackground} p-3 lg:p-6 ${skin.uiBorder} max-w-full overflow-x-auto`}>
-            <div className="relative w-full max-w-[448px] mx-auto" style={{ aspectRatio: `${BOARD_WIDTH}/${BOARD_HEIGHT}` }}>
+            <div
+              className="relative w-full max-w-[448px] mx-auto"
+              style={{ aspectRatio: `${BOARD_WIDTH}/${BOARD_HEIGHT}` }}
+            >
               <canvas
                 ref={canvasRef}
                 width={BOARD_WIDTH * CELL_SIZE} // This will now be 16 * 28 = 448px
                 height={BOARD_HEIGHT * CELL_SIZE}
                 className={`w-full h-full ${
-                skin.name === "Modern"
-                  ? "border-2 border-blue-500/50 rounded-lg"
-                  : skin.name === "Neon"
-                    ? "border-2 border-pink-500/50"
-                    : skin.name === "Brick Breaker"
-                      ? "border-4 border-stone-600"
-                      : skin.name === "Glossy 3D"
-                        ? "border-2 border-slate-600 rounded-lg"
-                        : skin.name === "Shiny 3D Chrome"
-                          ? "border-3 border-yellow-400/60 rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.4)]"
-                          : skin.name === "Retro Arcade" || skin.name === "Block Blast"
-                            ? "border-4 border-cyan-400 shadow-[0_0_15px_rgba(0,255,255,0.6)]"
-                            : "border-2 border-gray-600"
+                  skin.name === "Modern"
+                    ? "border-2 border-blue-500/50 rounded-lg"
+                    : skin.name === "Neon"
+                      ? "border-2 border-pink-500/50"
+                      : skin.name === "Brick Breaker"
+                        ? "border-4 border-stone-600"
+                        : skin.name === "Glossy 3D"
+                          ? "border-2 border-slate-600 rounded-lg"
+                          : skin.name === "Shiny 3D Chrome"
+                            ? "border-3 border-yellow-400/60 rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.4)]"
+                            : skin.name === "Retro Arcade" || skin.name === "Block Blast"
+                              ? "border-4 border-cyan-400 shadow-[0_0_15px_rgba(0,255,255,0.6)]"
+                              : "border-2 border-gray-600"
                 }`}
               />
             </div>
@@ -1875,11 +1811,7 @@ export default function TetrisComponent() {
       </div>
 
       {/* Mobile Help Dialog */}
-      <MobileHelpDialog 
-        isOpen={showMobileHelp}
-        onClose={() => setShowMobileHelp(false)}
-        skin={skin}
-      />
+      <MobileHelpDialog isOpen={showMobileHelp} onClose={() => setShowMobileHelp(false)} skin={skin} />
     </div>
   )
 }
