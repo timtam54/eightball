@@ -770,7 +770,7 @@ export default function PoolGameComponent() {
       <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8"><a href="https://www.AussieSoft.com.au">Onni</a> 8-Ball Pool</h1>
       
       <div className="mb-4">
-        <Link href="/games" className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-colors">
+        <Link href="/" className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-colors">
           Back to Games →
         </Link>
       </div>

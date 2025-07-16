@@ -1,13 +1,13 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.eightballgames.app',
-  appName: 'EightBall Games',
+  appId: 'com.onnitetrisgames.app',
+  appName: 'Onni Tetris',
   webDir: 'out',
   server: {
     androidScheme: 'https',
     iosScheme: 'https',
-    hostname: 'eightballgames.app'
+    hostname: 'onnitetrisgames.app'
   },
   ios: {
     contentInset: 'automatic',

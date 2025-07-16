@@ -90,7 +90,7 @@ async function generateSplashScreen() {
         <ellipse cx="-60" cy="-180" rx="70" ry="50" fill="white" opacity="0.3"/>
         
         <!-- Title -->
-        <text x="0" y="150" font-family="Arial, sans-serif" font-size="120" font-weight="bold" text-anchor="middle" fill="white">EightBall</text>
+        <text x="0" y="150" font-family="Arial, sans-serif" font-size="120" font-weight="bold" text-anchor="middle" fill="white">Tetris</text>
         <text x="0" y="280" font-family="Arial, sans-serif" font-size="100" font-weight="300" text-anchor="middle" fill="#9CA3AF">Games</text>
       </g>
     </svg>

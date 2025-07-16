@@ -60,31 +60,21 @@ export default function MobileHelpDialog({ isOpen, onClose, skin }: MobileHelpDi
         <div className={`space-y-4 ${skin.uiText}`}>
           <div className="border-b border-gray-600 pb-4">
             <h3 className="font-semibold mb-2 flex items-center gap-2">
-              <span className="text-blue-400">📱</span> Touch Controls
+              <span className="text-blue-400">👆</span> Swipe Controls
             </h3>
             <p className="text-sm opacity-90">
-              Control your pieces by tapping different areas of the game board:
+              Control your pieces using intuitive swipe gestures:
             </p>
           </div>
 
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-purple-600/30 rounded flex items-center justify-center flex-shrink-0">
-                <span className="text-purple-400">↻</span>
-              </div>
-              <div>
-                <h4 className="font-semibold">Rotate</h4>
-                <p className="text-sm opacity-80">Tap on or above the falling piece</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-blue-600/30 rounded flex items-center justify-center flex-shrink-0">
                 <span className="text-blue-400">←</span>
               </div>
               <div>
-                <h4 className="font-semibold">Move Left</h4>
-                <p className="text-sm opacity-80">Tap to the left of the piece</p>
+                <h4 className="font-semibold">Swipe Left</h4>
+                <p className="text-sm opacity-80">Move piece left</p>
               </div>
             </div>
 
@@ -93,8 +83,8 @@ export default function MobileHelpDialog({ isOpen, onClose, skin }: MobileHelpDi
                 <span className="text-blue-400">→</span>
               </div>
               <div>
-                <h4 className="font-semibold">Move Right</h4>
-                <p className="text-sm opacity-80">Tap to the right of the piece</p>
+                <h4 className="font-semibold">Swipe Right</h4>
+                <p className="text-sm opacity-80">Move piece right</p>
               </div>
             </div>
 
@@ -103,25 +93,35 @@ export default function MobileHelpDialog({ isOpen, onClose, skin }: MobileHelpDi
                 <span className="text-green-400">↓</span>
               </div>
               <div>
-                <h4 className="font-semibold">Soft Drop</h4>
-                <p className="text-sm opacity-80">Tap below the piece to drop faster</p>
+                <h4 className="font-semibold">Swipe Down</h4>
+                <p className="text-sm opacity-80">Drop piece faster</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-purple-600/30 rounded flex items-center justify-center flex-shrink-0">
+                <span className="text-purple-400">↑</span>
+              </div>
+              <div>
+                <h4 className="font-semibold">Swipe Up</h4>
+                <p className="text-sm opacity-80">Rotate piece</p>
               </div>
             </div>
 
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-yellow-600/30 rounded flex items-center justify-center flex-shrink-0">
-                <span className="text-yellow-400">⇊</span>
+                <span className="text-yellow-400">👆</span>
               </div>
               <div>
-                <h4 className="font-semibold">Hard Drop</h4>
-                <p className="text-sm opacity-80">Double-tap below the piece for instant drop</p>
+                <h4 className="font-semibold">Tap</h4>
+                <p className="text-sm opacity-80">Quick tap to rotate piece</p>
               </div>
             </div>
           </div>
 
           <div className="border-t border-gray-600 pt-4">
             <p className="text-sm opacity-70 italic">
-              💡 Tip: You can also use the preview pieces above the board to swap upcoming pieces!
+              💡 Tip: You can also tap the preview pieces above the board to swap upcoming pieces!
             </p>
           </div>
         </div>

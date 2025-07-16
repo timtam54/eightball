@@ -1,6 +1,6 @@
 {
-  "name": "EightBall Games Collection",
-  "short_name": "EightBall",
+  "name": "Onni Tetris Games Collection",
+  "short_name": "OnniTetris",
   "description": "A collection of classic games including Tetris and more",
   "start_url": "/",
   "display": "standalone",

@@ -4,7 +4,7 @@ const RUNTIME_CACHE = 'eightball-runtime-v1';
 // Core files to cache on install
 const urlsToCache = [
   '/',
-  '/games',
+
   '/tetris',
   '/8-ball',
   '/terracotta',

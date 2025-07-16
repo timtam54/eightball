@@ -41,7 +41,7 @@ interface TetrisSkin {
   background: string
   gridColor: string
   gridLineWidth: number
-  blockStyle: "classic" | "modern" | "neon" | "brick" | "glossy" | "shiny3d" | "retro"
+  blockStyle: "classic" | "modern" | "neon" | "brick" | "glossy" | "shiny3d" | "retro" | "beveled"
   uiBackground: string
   uiBorder: string
   uiText: string
@@ -102,7 +102,7 @@ const SKINS: { [key: string]: TetrisSkin } = {
     background: "#2B4A7C", // Deep blue background like in screenshot
     gridColor: "#1E3A5F", // Darker blue for grid lines
     gridLineWidth: 0, // No grid lines for seamless look
-    blockStyle: "retro",
+    blockStyle: "beveled",
     uiBackground: "bg-slate-800",
     uiBorder: "border-2 border-slate-600",
     uiText: "text-white",
@@ -173,7 +173,7 @@ const SKINS: { [key: string]: TetrisSkin } = {
     background: "#000000",
     gridColor: "#222222",
     gridLineWidth: 0, // No grid lines for seamless look
-    blockStyle: "classic",
+    blockStyle: "beveled",
     uiBackground: "bg-black",
     uiBorder: "border-4 border-gray-700",
     uiText: "text-white",
@@ -233,7 +233,7 @@ const SKINS: { [key: string]: TetrisSkin } = {
     background: "gradient",
     gridColor: "rgba(255, 255, 255, 0.05)", // Very subtle grid
     gridLineWidth: 0, // No grid lines for seamless look
-    blockStyle: "modern",
+    blockStyle: "beveled",
     uiBackground: "bg-gradient-to-br from-gray-800 to-gray-900",
     uiBorder: "rounded-xl shadow-xl border border-purple-500/30",
     uiText: "text-white",
@@ -293,7 +293,7 @@ const SKINS: { [key: string]: TetrisSkin } = {
     background: "#0a0a0a",
     gridColor: "#1a1a1a",
     gridLineWidth: 0, // No grid lines for seamless look
-    blockStyle: "neon",
+    blockStyle: "beveled",
     uiBackground: "bg-gray-950",
     uiBorder: "border-2 border-pink-500/50 shadow-[0_0_20px_rgba(236,72,153,0.5)]",
     uiText: "text-white",
@@ -353,7 +353,7 @@ const SKINS: { [key: string]: TetrisSkin } = {
     background: "#696969",
     gridColor: "#4a4a4a",
     gridLineWidth: 0, // No grid lines for seamless look
-    blockStyle: "brick",
+    blockStyle: "beveled",
     uiBackground: "bg-stone-800",
     uiBorder: "border-4 border-stone-600 shadow-inner",
     uiText: "text-orange-100",
@@ -413,7 +413,7 @@ const SKINS: { [key: string]: TetrisSkin } = {
     background: "#2C3E50",
     gridColor: "rgba(255, 255, 255, 0.02)", // Very subtle grid
     gridLineWidth: 0, // No grid lines for seamless look
-    blockStyle: "glossy",
+    blockStyle: "beveled",
     uiBackground: "bg-slate-800",
     uiBorder: "rounded-2xl shadow-2xl border border-slate-600",
     uiText: "text-white",
@@ -473,7 +473,7 @@ const SKINS: { [key: string]: TetrisSkin } = {
     background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
     gridColor: "rgba(255, 255, 255, 0.05)", // Very subtle grid
     gridLineWidth: 0, // No grid lines for seamless look
-    blockStyle: "shiny3d",
+    blockStyle: "beveled",
     uiBackground: "bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900",
     uiBorder: "rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] border-2 border-gray-500/30",
     uiText: "text-white",
@@ -546,7 +546,7 @@ const SKINS: { [key: string]: TetrisSkin } = {
     background: "#2B4A7C", // Deep blue background like in screenshot
     gridColor: "#1E3A5F", // Darker blue for grid lines
     gridLineWidth: 0, // No grid lines for seamless look
-    blockStyle: "retro",
+    blockStyle: "beveled",
     uiBackground: "bg-slate-800",
     uiBorder: "border-2 border-slate-600",
     uiText: "text-white",
@@ -646,7 +646,7 @@ export default function TetrisComponent() {
   const [gameOver, setGameOver] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [explosions, setExplosions] = useState<Explosion[]>([])
-  const [currentSkin, setCurrentSkin] = useState<string>("blockblast")
+  const [currentSkin, setCurrentSkin] = useState<string>("classic")
   const [showMobileHelp, setShowMobileHelp] = useState(false)
   const [touchFeedback, setTouchFeedback] = useState<{ x: number; y: number; time: number } | null>(null)
   const [blockBlastColorIndex, setBlockBlastColorIndex] = useState(0)
@@ -955,66 +955,105 @@ export default function TetrisComponent() {
     return () => window.removeEventListener("keydown", handleKeyPress)
   }, [movePiece, rotate, hardDrop, gameOver])
 
-  // Handle touch input for mobile
+  // Handle touch input for mobile with swipe gestures
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas || !currentPiece) return
 
-    let lastTapTime = 0
-    const DOUBLE_TAP_DELAY = 300 // milliseconds
+    let touchStartX = 0
+    let touchStartY = 0
+    let touchStartTime = 0
+    const SWIPE_THRESHOLD = 30 // pixels
+    const SWIPE_TIME_THRESHOLD = 300 // milliseconds
 
-    const handleTouch = (e: TouchEvent) => {
+    const handleTouchStart = (e: TouchEvent) => {
       e.preventDefault()
       if (gameOver || isPaused) return
 
       const touch = e.touches[0]
-      const rect = canvas.getBoundingClientRect()
-
-      // Convert touch coordinates to game board coordinates
-      const x = ((touch.clientX - rect.left) / rect.width) * BOARD_WIDTH
-      const y = ((touch.clientY - rect.top) / rect.height) * BOARD_HEIGHT
-
-      // Show touch feedback
-      setTouchFeedback({ x, y, time: Date.now() })
-      setTimeout(() => setTouchFeedback(null), 200) // Hide after 200ms
-
-      // Get piece center position
-      const pieceCenterX = currentPiece.position.x + currentPiece.shape[0].length / 2
-      const pieceCenterY = currentPiece.position.y + currentPiece.shape.length / 2
-
-      // Check for double tap for hard drop
-      const currentTime = Date.now()
-      const isDoubleTap = currentTime - lastTapTime < DOUBLE_TAP_DELAY
-
-      // Determine action based on tap position relative to piece
-      if (y > pieceCenterY + 1) {
-        // Tap below piece
-        if (isDoubleTap) {
-          hardDrop()
-        } else {
-          movePiece(0, 1)
-        }
-      } else if (x < pieceCenterX - 1) {
-        // Tap to the left of piece
-        movePiece(-1, 0)
-      } else if (x > pieceCenterX + 1) {
-        // Tap to the right of piece
-        movePiece(1, 0)
-      } else {
-        // Tap on or near the piece - rotate
-        rotate()
-      }
-
-      lastTapTime = currentTime
+      touchStartX = touch.clientX
+      touchStartY = touch.clientY
+      touchStartTime = Date.now()
     }
 
-    canvas.addEventListener("touchstart", handleTouch)
-    return () => canvas.removeEventListener("touchstart", handleTouch)
-  }, [currentPiece, gameOver, isPaused, movePiece, rotate, hardDrop])
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault() // Prevent scrolling while playing
+    }
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      e.preventDefault()
+      if (gameOver || isPaused) return
+
+      const touch = e.changedTouches[0]
+      const touchEndX = touch.clientX
+      const touchEndY = touch.clientY
+      const touchEndTime = Date.now()
+
+      const deltaX = touchEndX - touchStartX
+      const deltaY = touchEndY - touchStartY
+      const deltaTime = touchEndTime - touchStartTime
+
+      // Only process if the touch was quick enough (not a long press)
+      if (deltaTime > SWIPE_TIME_THRESHOLD) {
+        return
+      }
+
+      const absX = Math.abs(deltaX)
+      const absY = Math.abs(deltaY)
+
+      // Determine if it's a swipe or a tap
+      if (absX < SWIPE_THRESHOLD && absY < SWIPE_THRESHOLD) {
+        // It's a tap - rotate the piece
+        rotate()
+        vibrate('light')
+      } else if (absX > absY) {
+        // Horizontal swipe
+        if (deltaX > SWIPE_THRESHOLD) {
+          // Swipe right
+          movePiece(1, 0)
+          vibrate('light')
+        } else if (deltaX < -SWIPE_THRESHOLD) {
+          // Swipe left
+          movePiece(-1, 0)
+          vibrate('light')
+        }
+      } else {
+        // Vertical swipe
+        if (deltaY > SWIPE_THRESHOLD) {
+          // Swipe down - soft drop
+          movePiece(0, 1)
+          vibrate('light')
+        } else if (deltaY < -SWIPE_THRESHOLD) {
+          // Swipe up - rotate
+          rotate()
+          vibrate('light')
+        }
+      }
+
+      // Show touch feedback at the end position
+      const rect = canvas.getBoundingClientRect()
+      const x = ((touchEndX - rect.left) / rect.width) * BOARD_WIDTH
+      const y = ((touchEndY - rect.top) / rect.height) * BOARD_HEIGHT
+      setTouchFeedback({ x, y, time: Date.now() })
+      setTimeout(() => setTouchFeedback(null), 200)
+    }
+
+    canvas.addEventListener("touchstart", handleTouchStart, { passive: false })
+    canvas.addEventListener("touchmove", handleTouchMove, { passive: false })
+    canvas.addEventListener("touchend", handleTouchEnd, { passive: false })
+    
+    return () => {
+      canvas.removeEventListener("touchstart", handleTouchStart)
+      canvas.removeEventListener("touchmove", handleTouchMove)
+      canvas.removeEventListener("touchend", handleTouchEnd)
+    }
+  }, [currentPiece, gameOver, isPaused, movePiece, rotate, vibrate])
 
   // Game loop
   useEffect(() => {
-    const dropInterval = Math.max(100, 1000 - (level - 1) * 100)
+    // Increased speed by 20% (reduced interval by 20%)
+    const baseInterval = 1000 - (level - 1) * 100
+    const dropInterval = Math.max(80, baseInterval * 0.8) // 20% faster
 
     gameLoopRef.current = window.setInterval(() => {
       if (!isPaused && !gameOver) {
@@ -1098,6 +1137,60 @@ export default function TetrisComponent() {
       ctx.fillStyle = adjustBrightness(color, -40)
       ctx.fillRect(x + width - 2, y + 2, 2, height - 2)
       ctx.fillRect(x + 2, y + height - 2, width - 2, 2)
+    } else if (skin.blockStyle === "beveled") {
+      // Beveled tiles like in the reference image
+      const bevelSize = 4
+      
+      // Main block color
+      ctx.fillStyle = color
+      ctx.fillRect(x, y, width, height)
+      
+      // Top and left edges - bright highlight
+      ctx.fillStyle = adjustBrightness(color, 60)
+      // Top edge
+      ctx.beginPath()
+      ctx.moveTo(x, y)
+      ctx.lineTo(x + width, y)
+      ctx.lineTo(x + width - bevelSize, y + bevelSize)
+      ctx.lineTo(x + bevelSize, y + bevelSize)
+      ctx.closePath()
+      ctx.fill()
+      
+      // Left edge
+      ctx.beginPath()
+      ctx.moveTo(x, y)
+      ctx.lineTo(x, y + height)
+      ctx.lineTo(x + bevelSize, y + height - bevelSize)
+      ctx.lineTo(x + bevelSize, y + bevelSize)
+      ctx.closePath()
+      ctx.fill()
+      
+      // Bottom and right edges - dark shadow
+      ctx.fillStyle = adjustBrightness(color, -50)
+      // Bottom edge
+      ctx.beginPath()
+      ctx.moveTo(x, y + height)
+      ctx.lineTo(x + width, y + height)
+      ctx.lineTo(x + width - bevelSize, y + height - bevelSize)
+      ctx.lineTo(x + bevelSize, y + height - bevelSize)
+      ctx.closePath()
+      ctx.fill()
+      
+      // Right edge
+      ctx.beginPath()
+      ctx.moveTo(x + width, y)
+      ctx.lineTo(x + width, y + height)
+      ctx.lineTo(x + width - bevelSize, y + height - bevelSize)
+      ctx.lineTo(x + width - bevelSize, y + bevelSize)
+      ctx.closePath()
+      ctx.fill()
+      
+      // Inner face with slight gradient for depth
+      const innerGradient = ctx.createLinearGradient(x + bevelSize, y + bevelSize, x + width - bevelSize, y + height - bevelSize)
+      innerGradient.addColorStop(0, adjustBrightness(color, 10))
+      innerGradient.addColorStop(1, adjustBrightness(color, -10))
+      ctx.fillStyle = innerGradient
+      ctx.fillRect(x + bevelSize, y + bevelSize, width - bevelSize * 2, height - bevelSize * 2)
     } else if (skin.blockStyle === "modern") {
       const depth = 2
       // Main face
@@ -1636,7 +1729,7 @@ export default function TetrisComponent() {
 
       <div className="mb-4 flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto max-w-md">
         <div className="flex justify-between item-center">
-        <Link href="/games" className={`${skin.buttonStyle} w-full`} style={{ fontFamily: skin.fontFamily }}>
+        <Link href="/" className={`${skin.buttonStyle} w-full`} style={{ fontFamily: skin.fontFamily }}>
           ← BACK TO GAMES
         </Link>
         <button

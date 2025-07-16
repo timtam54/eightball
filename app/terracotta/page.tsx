@@ -383,7 +383,7 @@ export default function Tetris3D() {
       <div className="mb-4 text-gray-800 text-center">
         <h1 className="text-3xl font-bold mb-2">3D Clay Tetris</h1>
         <div className="mb-3">
-          <Link href="/games" className="inline-block bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+          <Link href="/" className="inline-block bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
             ← Back to Games
           </Link>
         </div>

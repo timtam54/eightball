@@ -82,7 +82,7 @@ export default function InstallPrompt() {
   return (
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-gray-900 border-2 border-blue-500 rounded-lg shadow-2xl p-4 z-50">
       <div className="flex justify-between items-start mb-3">
-        <h3 className="text-white font-bold text-lg">Install EightBall Games</h3>
+        <h3 className="text-white font-bold text-lg">Install Onni Tetris Games</h3>
         <button
           onClick={handleDismiss}
           className="text-gray-400 hover:text-white transition-colors"

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
@@ -14,20 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EightBall Games",
+  title: "Onni Tetris Games",
   description: "A collection of classic games including Tetris and more",
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
   manifest: '/manifest.json',
-  themeColor: '#4169E1',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'EightBall Games',
+    title: 'Onni Tetris Games',
   },
   icons: {
     icon: [
@@ -38,6 +31,14 @@ export const metadata: Metadata = {
       { url: '/api/generate-icons', sizes: '180x180', type: 'image/svg+xml' },
     ],
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#4169E1',
 };
 
 export default function RootLayout({
