@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import InstallPrompt from '../components/InstallPrompt';
+import HighScores from '../components/HighScores';
 
 export default function GamesPage() {
   const [isClient, setIsClient] = useState(false);
@@ -132,6 +133,11 @@ export default function GamesPage() {
               </div>
             </div>
           </Link>
+        </div>
+
+        {/* High Scores Section */}
+        <div className="mt-12 w-full max-w-md">
+          <HighScores />
         </div>
 
         <footer className="mt-16 text-center">

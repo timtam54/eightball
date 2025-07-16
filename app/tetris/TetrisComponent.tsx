@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import MobileHelpDialog from "./MobileHelpDialog"
+import { useNativeFeatures } from "../hooks/useNativeFeatures"
 
 interface Position {
   x: number
@@ -655,6 +656,7 @@ export default function TetrisComponent() {
   const animationRef = useRef<number | undefined>(undefined)
 
   const skin = SKINS[currentSkin]
+  const { vibrate, saveHighScore, getHighScore, share, incrementGamesPlayed } = useNativeFeatures()
 
   const createNewPiece = useCallback(() => {
     const pieceData = skin.pieces[Math.floor(Math.random() * skin.pieces.length)]
@@ -799,11 +801,19 @@ export default function TetrisComponent() {
       // Create explosions for cleared lines
       if (clearedRows.length > 0) {
         setExplosions((prev) => [...prev, ...clearedRows.map(({ row, colors }) => createExplosion(row, colors))])
+        // Haptic feedback based on lines cleared
+        if (linesCleared === 1) {
+          vibrate('medium')
+        } else if (linesCleared === 2 || linesCleared === 3) {
+          vibrate('heavy')
+        } else if (linesCleared >= 4) {
+          vibrate('success')
+        }
       }
 
       return { newBoard, linesCleared }
     },
-    [createExplosion],
+    [createExplosion, vibrate],
   )
 
   const movePiece = useCallback(
@@ -850,6 +860,9 @@ export default function TetrisComponent() {
           const newPiece = nextPieces[0]
           if (checkCollision(newPiece, newBoard)) {
             setGameOver(true)
+            vibrate('error')
+            saveHighScore('tetris', score)
+            incrementGamesPlayed()
           } else {
             setCurrentPiece(newPiece)
             // Remove first piece and add new one to end
@@ -871,6 +884,10 @@ export default function TetrisComponent() {
       createNewPiece,
       currentSkin,
       blockBlastColorIndex,
+      vibrate,
+      saveHighScore,
+      score,
+      incrementGamesPlayed,
     ],
   )
 
@@ -882,8 +899,9 @@ export default function TetrisComponent() {
 
     if (!checkCollision(rotatedPiece, board)) {
       setCurrentPiece(rotatedPiece)
+      vibrate('light')
     }
-  }, [currentPiece, board, gameOver, isPaused, checkCollision, rotatePiece])
+  }, [currentPiece, board, gameOver, isPaused, checkCollision, rotatePiece, vibrate])
 
   const hardDrop = useCallback(() => {
     if (!currentPiece || gameOver || isPaused) return
@@ -1776,9 +1794,14 @@ export default function TetrisComponent() {
             </div>
 
             {gameOver && (
-              <button onClick={resetGame} className={`${skin.buttonStyle} w-full mb-2`}>
-                {skin.name === "Modern" ? "New Game" : "NEW GAME"}
-              </button>
+              <>
+                <button onClick={resetGame} className={`${skin.buttonStyle} w-full mb-2`}>
+                  {skin.name === "Modern" ? "New Game" : "NEW GAME"}
+                </button>
+                <button onClick={() => share('Tetris', score)} className={`${skin.buttonStyle} w-full mb-2`}>
+                  {skin.name === "Modern" ? "Share Score" : "SHARE SCORE"}
+                </button>
+              </>
             )}
 
             <button
