@@ -1172,7 +1172,7 @@ export default function TetrisComponent() {
       ctx.fillRect(x + 2, y + height - 2, width - 2, 2)
     } else if (skin.blockStyle === "beveled") {
       // Beveled tiles like in the reference image
-      const bevelSize = 4
+      const bevelSize = 6  // Increased from 4 to 6 for thicker bevel
       
       // Main block color
       ctx.fillStyle = color
