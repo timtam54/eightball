@@ -752,8 +752,9 @@ export default function TetrisComponent() {
     for (let y = 0; y < piece.shape.length; y++) {
       for (let x = 0; x < piece.shape[y].length; x++) {
         if (piece.shape[y][x]) {
-          const newX = piece.position.x + x + offsetX
-          const newY = piece.position.y + y + offsetY
+          // Round positions for collision detection
+          const newX = Math.round(piece.position.x + x + offsetX)
+          const newY = Math.round(piece.position.y + y + offsetY)
 
           if (newX < 0 || newX >= boardWidth || newY >= BOARD_HEIGHT) {
             return true
@@ -777,8 +778,9 @@ export default function TetrisComponent() {
     for (let y = 0; y < piece.shape.length; y++) {
       for (let x = 0; x < piece.shape[y].length; x++) {
         if (piece.shape[y][x]) {
-          const boardY = piece.position.y + y
-          const boardX = piece.position.x + x
+          // Round positions when merging to board
+          const boardY = Math.round(piece.position.y + y)
+          const boardX = Math.round(piece.position.x + x)
           if (boardY >= 0) {
             newBoard[boardY][boardX] = piece.color
           }
@@ -995,8 +997,8 @@ export default function TetrisComponent() {
     }
 
     // Drop only half the distance for more continuous appearance
-    const halfDropDistance = Math.floor(dropDistance / 6)
-
+    const halfDropDistance = Math.floor(dropDistance /1)
+    
     setCurrentPiece({
       ...currentPiece,
       position: {
@@ -1049,8 +1051,8 @@ export default function TetrisComponent() {
     let touchStartX = 0
     let touchStartY = 0
     let touchStartTime = 0
-    const SWIPE_THRESHOLD = 30 // pixels
-    const SWIPE_TIME_THRESHOLD = 300 // milliseconds
+    const SWIPE_THRESHOLD = 10 // pixels - reduced from 30 for more sensitivity
+    const SWIPE_TIME_THRESHOLD = 500 // milliseconds - increased from 300 for easier swipes
 
     const handleTouchStart = (e: TouchEvent) => {
       e.preventDefault()
@@ -1143,7 +1145,7 @@ export default function TetrisComponent() {
 
     gameLoopRef.current = window.setInterval(() => {
       if (!isPaused && !gameOver) {
-        movePiece(0, 1)
+        movePiece(0, 0.5)
       }
     }, dropInterval)
 
@@ -1259,7 +1261,7 @@ export default function TetrisComponent() {
       ctx.fillRect(x + 2, y + height - 2, width - 2, 2)
     } else if (skin.blockStyle === "beveled") {
       // Beveled tiles like in the reference image
-      const bevelSize = 6  // Increased from 4 to 6 for thicker bevel
+      const bevelSize = 4//6  // Increased from 4 to 6 for thicker bevel
       
       // Main block color
       ctx.fillStyle = color
@@ -1430,7 +1432,7 @@ export default function TetrisComponent() {
       ctx.fillRect(x, y + height * 0.6, width, height * 0.4)
     } else if (skin.blockStyle === "retro") {
       // Classic 3D beveled blocks - seamless
-      const bevelSize = 2
+      const bevelSize = 4//2
       // Main block color
       ctx.fillStyle = color
       ctx.fillRect(x, y, width, height)
@@ -1573,7 +1575,7 @@ export default function TetrisComponent() {
       }
     }
 
-    // Draw current piece as 3D bricks - now touching each other
+    // Draw current piece as 3D bricks - using floating-point positions for smooth movement
     if (currentPiece && !gameOver) {
       for (let y = 0; y < currentPiece.shape.length; y++) {
         for (let x = 0; x < currentPiece.shape[y].length; x++) {
@@ -1591,7 +1593,7 @@ export default function TetrisComponent() {
       }
 
       // Draw ghost piece
-      let ghostY = currentPiece.position.y
+      let ghostY = Math.round(currentPiece.position.y)
       while (!checkCollision(currentPiece, board, 0, ghostY - currentPiece.position.y + 1)) {
         ghostY++
       }
@@ -1602,7 +1604,7 @@ export default function TetrisComponent() {
           if (currentPiece.shape[y][x]) {
             ctx.strokeStyle = currentPiece.color
             ctx.lineWidth = 2
-            ctx.strokeRect((currentPiece.position.x + x) * cellSize, (ghostY + y) * cellSize, cellSize, cellSize)
+            ctx.strokeRect((Math.round(currentPiece.position.x) + x) * cellSize, (ghostY + y) * cellSize, cellSize, cellSize)
           }
         }
       }
