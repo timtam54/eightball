@@ -671,12 +671,61 @@ export default function TetrisComponent() {
   const gameLoopRef = useRef<number | undefined>(undefined)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationRef = useRef<number | undefined>(undefined)
+  
+  // Audio refs
+  const explosionSoundRef = useRef<HTMLAudioElement | null>(null)
+  const bangSoundRef = useRef<HTMLAudioElement | null>(null)
+  const gameOverSoundRef = useRef<HTMLAudioElement | null>(null)
+  const backgroundMusicRef = useRef<HTMLAudioElement | null>(null)
 
   const skin = SKINS[currentSkin]
   const { vibrate, saveHighScore, getHighScore, share, incrementGamesPlayed } = useNativeFeatures()
   
   // Calculate cell size based on board width
   const cellSize = boardWidth ? getCellSize(boardWidth) : BASE_CELL_SIZE
+
+  // Initialize audio elements
+  useEffect(() => {
+    // Create audio elements
+    explosionSoundRef.current = new Audio('/sounds/explosion.mp3')
+    bangSoundRef.current = new Audio('/sounds/bang.mp3')
+    gameOverSoundRef.current = new Audio('/sounds/gameover.mp3')
+    backgroundMusicRef.current = new Audio('/sounds/arcade-melody.mp3')
+    
+    // Set volumes
+    if (explosionSoundRef.current) explosionSoundRef.current.volume = 0.5
+    if (bangSoundRef.current) bangSoundRef.current.volume = 0.3
+    if (gameOverSoundRef.current) gameOverSoundRef.current.volume = 0.6
+    if (backgroundMusicRef.current) {
+      backgroundMusicRef.current.volume = 0.4
+      backgroundMusicRef.current.loop = true // Enable looping
+    }
+    
+    // Preload sounds
+    explosionSoundRef.current?.load()
+    bangSoundRef.current?.load()
+    gameOverSoundRef.current?.load()
+    backgroundMusicRef.current?.load()
+    
+    // Cleanup function to stop music when component unmounts
+    return () => {
+      if (backgroundMusicRef.current) {
+        backgroundMusicRef.current.pause()
+        backgroundMusicRef.current.currentTime = 0
+      }
+    }
+  }, [])
+
+  // Sound helper functions
+  const playSound = useCallback((soundRef: React.RefObject<HTMLAudioElement | null>) => {
+    if (soundRef.current) {
+      soundRef.current.currentTime = 0 // Reset to start
+      soundRef.current.play().catch(e => {
+        // Ignore errors if autoplay is blocked
+        console.log('Sound play blocked:', e)
+      })
+    }
+  }, [])
 
   const createNewPiece = useCallback(() => {
     if (!boardWidth) return null
@@ -825,6 +874,8 @@ export default function TetrisComponent() {
       // Create explosions for cleared lines
       if (clearedRows.length > 0) {
         setExplosions((prev) => [...prev, ...clearedRows.map(({ row, colors }) => createExplosion(row, colors))])
+        // Play explosion sound
+        playSound(explosionSoundRef)
         // Haptic feedback based on lines cleared
         if (linesCleared === 1) {
           vibrate('medium')
@@ -837,7 +888,7 @@ export default function TetrisComponent() {
 
       return { newBoard, linesCleared }
     },
-    [createExplosion, vibrate, boardWidth],
+    [createExplosion, vibrate, boardWidth, playSound, explosionSoundRef],
   )
 
   const movePiece = useCallback(
@@ -854,6 +905,7 @@ export default function TetrisComponent() {
         })
       } else if (dy > 0) {
         // Piece has landed
+        playSound(bangSoundRef) // Play bang sound when piece lands
         const mergedBoard = mergePiece(currentPiece, board)
         const { newBoard, linesCleared } = clearLines(mergedBoard)
 
@@ -884,6 +936,7 @@ export default function TetrisComponent() {
           const newPiece = nextPieces[0]
           if (checkCollision(newPiece, newBoard)) {
             setGameOver(true)
+            playSound(gameOverSoundRef) // Play game over sound
             vibrate('error')
             saveHighScore('tetris', score)
             incrementGamesPlayed()
@@ -915,6 +968,9 @@ export default function TetrisComponent() {
       saveHighScore,
       score,
       incrementGamesPlayed,
+      playSound,
+      bangSoundRef,
+      gameOverSoundRef,
     ],
   )
 
@@ -938,11 +994,14 @@ export default function TetrisComponent() {
       dropDistance++
     }
 
+    // Drop only half the distance for more continuous appearance
+    const halfDropDistance = Math.floor(dropDistance / 6)
+
     setCurrentPiece({
       ...currentPiece,
       position: {
         x: currentPiece.position.x,
-        y: currentPiece.position.y + dropDistance,
+        y: currentPiece.position.y + halfDropDistance,
       },
     })
 
@@ -1078,9 +1137,9 @@ export default function TetrisComponent() {
 
   // Game loop
   useEffect(() => {
-    // Increased speed by 40% total (reduced interval by 36%)
+    // Halved the interval for more continuous movement
     const baseInterval = 1000 - (level - 1) * 100
-    const dropInterval = Math.max(64, baseInterval * 0.64) // 40% faster total
+    const dropInterval = Math.max(32, baseInterval * 0.10) // Halved from 0.64 to 0.32
 
     gameLoopRef.current = window.setInterval(() => {
       if (!isPaused && !gameOver) {
@@ -1100,6 +1159,19 @@ export default function TetrisComponent() {
     setLevel(Math.floor(lines / 10) + 1)
   }, [lines])
 
+  // Handle background music pause/resume
+  useEffect(() => {
+    if (backgroundMusicRef.current) {
+      if (isPaused || gameOver) {
+        backgroundMusicRef.current.pause()
+      } else if (boardWidth && !isPaused && !gameOver) {
+        backgroundMusicRef.current.play().catch(e => {
+          console.log('Background music resume blocked:', e)
+        })
+      }
+    }
+  }, [isPaused, gameOver, boardWidth])
+
   // Initialize game when board width is selected
   useEffect(() => {
     if (boardWidth) {
@@ -1108,6 +1180,13 @@ export default function TetrisComponent() {
       setNextPieces(initialPieces)
       const firstPiece = createNewPiece()
       if (firstPiece) setCurrentPiece(firstPiece)
+      
+      // Start background music
+      if (backgroundMusicRef.current) {
+        backgroundMusicRef.current.play().catch(e => {
+          console.log('Background music autoplay blocked:', e)
+        })
+      }
     }
   }, [boardWidth, createNewPiece])
 
@@ -1147,6 +1226,14 @@ export default function TetrisComponent() {
     setNextPieces(initialPieces)
     const firstPiece = createNewPiece()
     if (firstPiece) setCurrentPiece(firstPiece)
+    
+    // Restart background music
+    if (backgroundMusicRef.current) {
+      backgroundMusicRef.current.currentTime = 0
+      backgroundMusicRef.current.play().catch(e => {
+        console.log('Background music restart blocked:', e)
+      })
+    }
   }
 
   const draw3DBrick = (
