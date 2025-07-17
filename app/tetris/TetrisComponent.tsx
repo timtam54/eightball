@@ -569,7 +569,6 @@ const SKINS: { [key: string]: TetrisSkin } = {
   },
 }
 
-const BOARD_WIDTH = 16 // Changed from 10
 const BOARD_HEIGHT = 28 // Changed from 20 to make the box 8 bricks higher
 const CELL_SIZE = 28
 
@@ -594,36 +593,37 @@ const BLOCK_BLAST_COLOR_SCHEMES = [
 ]
 
 // Helper function to create pre-filled board with worm holes
-const createPrefilledBoard = (colorSchemeIndex = 0) => {
+const createPrefilledBoard = (width: number, colorSchemeIndex = 0) => {
   const newBoard = Array(BOARD_HEIGHT)
     .fill(null)
-    .map(() => Array(BOARD_WIDTH).fill(null))
+    .map(() => Array(width).fill(null))
 
   // Use the appropriate color scheme
   const colors = BLOCK_BLAST_COLOR_SCHEMES[colorSchemeIndex]
 
   // Fill bottom half (rows 14-27) with blocks, leaving strategic gaps
   for (let y = 14; y < BOARD_HEIGHT; y++) {
-    for (let x = 0; x < BOARD_WIDTH; x++) {
-      // Create worm hole patterns - strategic empty spaces
+    for (let x = 0; x < width; x++) {
+      // Create worm hole patterns - strategic empty spaces (adjusted for different widths)
+      const midPoint = Math.floor(width / 2)
       const shouldBeEmpty =
-        // Vertical channels
-        (x === 7 && y >= 16 && y <= 20) ||
-        (x === 8 && y >= 16 && y <= 20) ||
-        (x === 4 && y >= 18 && y <= 21) ||
-        (x === 12 && y >= 17 && y <= 22) ||
-        // Horizontal gaps
-        (y === 19 && x >= 2 && x <= 5) ||
-        (y === 21 && x >= 9 && x <= 11) ||
-        (y === 17 && x >= 13 && x <= 15) ||
-        // Random scattered holes for variety
-        (x === 1 && y === 20) ||
-        (x === 6 && y === 22) ||
-        (x === 10 && y === 18) ||
-        (x === 14 && y === 20) ||
-        (x === 3 && y === 16) ||
-        (x === 11 && y === 23) ||
-        (x === 15 && y === 15)
+        // Vertical channels (scaled to board width)
+        (x === midPoint - 1 && y >= 16 && y <= 20) ||
+        (x === midPoint && y >= 16 && y <= 20) ||
+        (x === Math.floor(width * 0.25) && y >= 18 && y <= 21) ||
+        (x === Math.floor(width * 0.75) && y >= 17 && y <= 22) ||
+        // Horizontal gaps (scaled to board width)
+        (y === 19 && x >= Math.floor(width * 0.125) && x <= Math.floor(width * 0.3125)) ||
+        (y === 21 && x >= Math.floor(width * 0.5625) && x <= Math.floor(width * 0.6875)) ||
+        (y === 17 && x >= Math.floor(width * 0.8125) && x <= Math.max(width - 1, Math.floor(width * 0.9375))) ||
+        // Random scattered holes for variety (scaled positions)
+        (x === Math.floor(width * 0.0625) && y === 20) ||
+        (x === Math.floor(width * 0.375) && y === 22) ||
+        (x === Math.floor(width * 0.625) && y === 18) ||
+        (x === Math.min(width - 2, Math.floor(width * 0.875)) && y === 20) ||
+        (x === Math.floor(width * 0.1875) && y === 16) ||
+        (x === Math.floor(width * 0.6875) && y === 23) ||
+        (x === Math.min(width - 1, Math.floor(width * 0.9375)) && y === 15)
 
       if (!shouldBeEmpty) {
         // Assign a fixed color that won't change - use a more random distribution
@@ -637,7 +637,9 @@ const createPrefilledBoard = (colorSchemeIndex = 0) => {
 }
 
 export default function TetrisComponent() {
-  const [board, setBoard] = useState<(string | null)[][]>(() => createPrefilledBoard(0))
+  const [boardWidth, setBoardWidth] = useState<number | null>(null)
+  const [showWidthDialog, setShowWidthDialog] = useState(true)
+  const [board, setBoard] = useState<(string | null)[][]>([])
   const [currentPiece, setCurrentPiece] = useState<Piece | null>(null)
   const [nextPieces, setNextPieces] = useState<Piece[]>([])
   const [score, setScore] = useState(0)
@@ -659,6 +661,7 @@ export default function TetrisComponent() {
   const { vibrate, saveHighScore, getHighScore, share, incrementGamesPlayed } = useNativeFeatures()
 
   const createNewPiece = useCallback(() => {
+    if (!boardWidth) return null
     const pieceData = skin.pieces[Math.floor(Math.random() * skin.pieces.length)]
     // For Block Blast skin, use colors from the current color scheme
     let pieceColor = pieceData.color
@@ -671,20 +674,21 @@ export default function TetrisComponent() {
       shape: pieceData.shape,
       color: pieceColor,
       position: {
-        x: Math.floor((BOARD_WIDTH - pieceData.shape[0].length) / 2),
+        x: Math.floor((boardWidth - pieceData.shape[0].length) / 2),
         y: 0,
       },
     }
-  }, [skin, currentSkin, blockBlastColorIndex])
+  }, [skin, currentSkin, blockBlastColorIndex, boardWidth])
 
   const checkCollision = useCallback((piece: Piece, board: (string | null)[][], offsetX = 0, offsetY = 0) => {
+    if (!boardWidth) return true
     for (let y = 0; y < piece.shape.length; y++) {
       for (let x = 0; x < piece.shape[y].length; x++) {
         if (piece.shape[y][x]) {
           const newX = piece.position.x + x + offsetX
           const newY = piece.position.y + y + offsetY
 
-          if (newX < 0 || newX >= BOARD_WIDTH || newY >= BOARD_HEIGHT) {
+          if (newX < 0 || newX >= boardWidth || newY >= BOARD_HEIGHT) {
             return true
           }
           if (newY >= 0 && board[newY][newX]) {
@@ -694,7 +698,7 @@ export default function TetrisComponent() {
       }
     }
     return false
-  }, [])
+  }, [boardWidth])
 
   const rotatePiece = useCallback((piece: Piece): number[][] => {
     const rotated = piece.shape[0].map((_, index) => piece.shape.map((row) => row[index]).reverse())
@@ -718,8 +722,9 @@ export default function TetrisComponent() {
   }, [])
 
   const createExplosion = useCallback((row: number, colors: string[]) => {
+    if (!boardWidth) return { row, particles: [], startTime: Date.now() }
     const particles: Particle[] = []
-    for (let x = 0; x < BOARD_WIDTH; x++) {
+    for (let x = 0; x < boardWidth; x++) {
       const color = colors[x] || "#ffffff"
       const cellX = x * CELL_SIZE
       const cellY = row * CELL_SIZE
@@ -778,10 +783,11 @@ export default function TetrisComponent() {
       particles,
       startTime: Date.now(),
     }
-  }, [])
+  }, [boardWidth])
 
   const clearLines = useCallback(
     (board: (string | null)[][]) => {
+      if (!boardWidth) return { newBoard: board, linesCleared: 0 }
       let linesCleared = 0
       const clearedRows: { row: number; colors: string[] }[] = []
 
@@ -795,7 +801,7 @@ export default function TetrisComponent() {
       })
 
       while (newBoard.length < BOARD_HEIGHT) {
-        newBoard.unshift(Array(BOARD_WIDTH).fill(null))
+        newBoard.unshift(Array(boardWidth).fill(null))
       }
 
       // Create explosions for cleared lines
@@ -813,7 +819,7 @@ export default function TetrisComponent() {
 
       return { newBoard, linesCleared }
     },
-    [createExplosion, vibrate],
+    [createExplosion, vibrate, boardWidth],
   )
 
   const movePiece = useCallback(
@@ -1032,7 +1038,7 @@ export default function TetrisComponent() {
 
       // Show touch feedback at the end position
       const rect = canvas.getBoundingClientRect()
-      const x = ((touchEndX - rect.left) / rect.width) * BOARD_WIDTH
+      const x = ((touchEndX - rect.left) / rect.width) * (boardWidth || 16)
       const y = ((touchEndY - rect.top) / rect.height) * BOARD_HEIGHT
       setTouchFeedback({ x, y, time: Date.now() })
       setTimeout(() => setTouchFeedback(null), 200)
@@ -1051,9 +1057,9 @@ export default function TetrisComponent() {
 
   // Game loop
   useEffect(() => {
-    // Increased speed by 20% (reduced interval by 20%)
+    // Increased speed by 40% total (reduced interval by 36%)
     const baseInterval = 1000 - (level - 1) * 100
-    const dropInterval = Math.max(80, baseInterval * 0.8) // 20% faster
+    const dropInterval = Math.max(64, baseInterval * 0.64) // 40% faster total
 
     gameLoopRef.current = window.setInterval(() => {
       if (!isPaused && !gameOver) {
@@ -1073,12 +1079,16 @@ export default function TetrisComponent() {
     setLevel(Math.floor(lines / 10) + 1)
   }, [lines])
 
-  // Initialize game
+  // Initialize game when board width is selected
   useEffect(() => {
-    const initialPieces = [createNewPiece(), createNewPiece(), createNewPiece()]
-    setNextPieces(initialPieces)
-    setCurrentPiece(createNewPiece())
-  }, [createNewPiece])
+    if (boardWidth) {
+      setBoard(createPrefilledBoard(boardWidth, 0))
+      const initialPieces = [createNewPiece(), createNewPiece(), createNewPiece()].filter(Boolean) as Piece[]
+      setNextPieces(initialPieces)
+      const firstPiece = createNewPiece()
+      if (firstPiece) setCurrentPiece(firstPiece)
+    }
+  }, [boardWidth, createNewPiece])
 
   // Helper function to adjust color brightness
   const adjustBrightness = (color: string, percent: number) => {
@@ -1102,8 +1112,9 @@ export default function TetrisComponent() {
 
   // Helper function to draw a 3D brick
   const resetGame = () => {
+    if (!boardWidth) return
     setBlockBlastColorIndex(0) // Reset color scheme to gold
-    setBoard(createPrefilledBoard(0)) // Start with gold color scheme
+    setBoard(createPrefilledBoard(boardWidth, 0)) // Start with gold color scheme
     setScore(0)
     setLines(0)
     setLevel(1)
@@ -1111,9 +1122,10 @@ export default function TetrisComponent() {
     setIsPaused(false)
     setExplosions([])
     // Initialize with 3 pieces in queue
-    const initialPieces = [createNewPiece(), createNewPiece(), createNewPiece()]
+    const initialPieces = [createNewPiece(), createNewPiece(), createNewPiece()].filter(Boolean) as Piece[]
     setNextPieces(initialPieces)
-    setCurrentPiece(createNewPiece())
+    const firstPiece = createNewPiece()
+    if (firstPiece) setCurrentPiece(firstPiece)
   }
 
   const draw3DBrick = (
@@ -1399,7 +1411,7 @@ export default function TetrisComponent() {
   // Draw game
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas || !boardWidth || board.length === 0) return
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
@@ -1432,10 +1444,10 @@ export default function TetrisComponent() {
       for (let y = 0; y <= BOARD_HEIGHT; y++) {
         ctx.beginPath()
         ctx.moveTo(0, y * CELL_SIZE)
-        ctx.lineTo(BOARD_WIDTH * CELL_SIZE, y * CELL_SIZE)
+        ctx.lineTo(boardWidth * CELL_SIZE, y * CELL_SIZE)
         ctx.stroke()
       }
-      for (let x = 0; x <= BOARD_WIDTH; x++) {
+      for (let x = 0; x <= boardWidth; x++) {
         ctx.beginPath()
         ctx.moveTo(x * CELL_SIZE, 0)
         ctx.lineTo(x * CELL_SIZE, BOARD_HEIGHT * CELL_SIZE)
@@ -1444,8 +1456,8 @@ export default function TetrisComponent() {
     }
 
     // Draw board cells as 3D bricks - now touching each other
-    for (let y = 0; y < BOARD_HEIGHT; y++) {
-      for (let x = 0; x < BOARD_WIDTH; x++) {
+    for (let y = 0; y < BOARD_HEIGHT && y < board.length; y++) {
+      for (let x = 0; x < boardWidth && board[y] && x < board[y].length; x++) {
         const cell = board[y][x]
         if (cell) {
           draw3DBrick(ctx, x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, cell)
@@ -1584,7 +1596,7 @@ export default function TetrisComponent() {
       ctx.textAlign = "center"
       ctx.fillText("PAUSED", canvas.width / 2, canvas.height / 2)
     }
-  }, [board, currentPiece, gameOver, isPaused, checkCollision, explosions, skin, touchFeedback])
+  }, [board, currentPiece, gameOver, isPaused, checkCollision, explosions, skin, touchFeedback, boardWidth])
 
   const drawNextPiece = useCallback(
     (canvas: HTMLCanvasElement | null) => {
@@ -1687,6 +1699,40 @@ export default function TetrisComponent() {
       drawSmallPiece(canvas, piece)
     })
   }, [nextPieces, drawSmallPiece])
+
+  // Width selection dialog
+  if (showWidthDialog && !boardWidth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-blue-900 flex items-center justify-center p-4">
+        <div className={`${skin.uiBackground} ${skin.uiBorder} p-8 max-w-md w-full rounded-lg shadow-2xl`}>
+          <h2 className={`text-3xl font-bold mb-6 text-center ${skin.uiAccent}`}>
+            Select Board Width
+          </h2>
+          <p className={`${skin.uiText} mb-6 text-center`}>
+            Choose how many blocks wide you want the game board to be:
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            {[8, 10, 12, 16].map((width) => (
+              <button
+                key={width}
+                onClick={() => {
+                  setBoardWidth(width)
+                  setShowWidthDialog(false)
+                }}
+                className={`${skin.buttonStyle} text-2xl py-6`}
+                style={{ fontFamily: skin.fontFamily }}
+              >
+                {width}
+              </button>
+            ))}
+          </div>
+          <p className={`${skin.uiText} mt-6 text-sm text-center opacity-70`}>
+            Smaller widths are more challenging!
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -1804,12 +1850,15 @@ export default function TetrisComponent() {
 
           <div className={`${skin.uiBackground} p-3 lg:p-6 ${skin.uiBorder} max-w-full overflow-x-auto`}>
             <div
-              className="relative w-full max-w-[448px] mx-auto"
-              style={{ aspectRatio: `${BOARD_WIDTH}/${BOARD_HEIGHT}` }}
+              className="relative w-full mx-auto"
+              style={{ 
+                aspectRatio: `${boardWidth}/${BOARD_HEIGHT}`,
+                maxWidth: `${(boardWidth || 16) * CELL_SIZE}px`
+              }}
             >
               <canvas
                 ref={canvasRef}
-                width={BOARD_WIDTH * CELL_SIZE} // This will now be 16 * 28 = 448px
+                width={(boardWidth || 16) * CELL_SIZE}
                 height={BOARD_HEIGHT * CELL_SIZE}
                 className={`w-full h-full ${
                   skin.name === "Modern"
