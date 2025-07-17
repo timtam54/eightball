@@ -798,48 +798,56 @@ export default function TetrisComponent() {
       const cellX = x * cellSize
       const cellY = row * cellSize
 
-      // Create brick fragments (larger pieces)
-      for (let i = 0; i < 4; i++) {
+      // Create shattered brick pieces - divide each brick into fragments
+      const fragmentsPerBrick = 6 // Create 6 fragments per brick for realistic shattering
+      const centerX = cellX + cellSize / 2
+      const centerY = cellY + cellSize / 2
+      
+      for (let i = 0; i < fragmentsPerBrick; i++) {
+        const angle = (Math.PI * 2 * i) / fragmentsPerBrick + Math.random() * 0.5
+        const speed = Math.random() * 8 + 4
+        
+        // Large brick fragments with realistic physics
         particles.push({
-          x: cellX + Math.random() * cellSize,
-          y: cellY + Math.random() * cellSize,
-          vx: (Math.random() - 0.5) * 6,
-          vy: -Math.random() * 8 - 2,
+          x: centerX + Math.cos(angle) * (cellSize / 4),
+          y: centerY + Math.sin(angle) * (cellSize / 4),
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - Math.random() * 4, // Slight upward bias
           life: 1,
           color: color,
-          size: Math.random() * 8 + 6,
+          size: cellSize / 3 + Math.random() * (cellSize / 6), // Larger fragments
           rotation: Math.random() * Math.PI * 2,
-          rotationSpeed: (Math.random() - 0.5) * 0.3,
+          rotationSpeed: (Math.random() - 0.5) * 0.4,
           type: "brick",
         })
       }
 
-      // Create smaller fragments
-      for (let i = 0; i < 8; i++) {
+      // Create smaller debris pieces
+      for (let i = 0; i < 4; i++) {
         particles.push({
           x: cellX + Math.random() * cellSize,
           y: cellY + Math.random() * cellSize,
-          vx: (Math.random() - 0.5) * 10,
-          vy: -Math.random() * 6 - 1,
+          vx: (Math.random() - 0.5) * 12,
+          vy: -Math.random() * 8 - 2,
           life: 1,
           color: color,
-          size: Math.random() * 4 + 2,
+          size: Math.random() * 6 + 3,
           rotation: Math.random() * Math.PI * 2,
-          rotationSpeed: (Math.random() - 0.5) * 0.5,
+          rotationSpeed: (Math.random() - 0.5) * 0.6,
           type: "fragment",
         })
       }
 
-      // Create dust particles with color tint
-      for (let i = 0; i < 12; i++) {
+      // Create dust/powder effect
+      for (let i = 0; i < 8; i++) {
         particles.push({
           x: cellX + Math.random() * cellSize,
           y: cellY + Math.random() * cellSize,
-          vx: (Math.random() - 0.5) * 4,
-          vy: -Math.random() * 3,
+          vx: (Math.random() - 0.5) * 6,
+          vy: -Math.random() * 4,
           life: 1,
-          color: Math.random() > 0.5 ? color : "#FFD700", // Mix of block color and gold
-          size: Math.random() * 6 + 4,
+          color: color,
+          size: Math.random() * 4 + 2,
           rotation: 0,
           rotationSpeed: 0,
           type: "dust",
@@ -1474,15 +1482,23 @@ export default function TetrisComponent() {
                   let gravity = 0.5
                   let drag = 0.98
                   let lifeFade = progress
+                  let bounce = 0
 
                   // Different physics for different particle types
                   if (particle.type === "dust") {
-                    gravity = 0.1
-                    drag = 0.95
-                    lifeFade = progress * 1.5 // Dust fades faster
+                    gravity = 0.15
+                    drag = 0.92
+                    lifeFade = progress * 2 // Dust fades faster
                   } else if (particle.type === "brick") {
-                    gravity = 0.8
-                    drag = 0.99
+                    gravity = 1.2 // Heavier pieces fall faster
+                    drag = 0.98
+                    // Add slight bounce when hitting bottom
+                    if (particle.y > BOARD_HEIGHT * cellSize - 20 && particle.vy > 0) {
+                      bounce = -particle.vy * 0.3
+                    }
+                  } else if (particle.type === "fragment") {
+                    gravity = 0.9
+                    drag = 0.97
                   }
 
                   return {
@@ -1490,13 +1506,15 @@ export default function TetrisComponent() {
                     x: particle.x + particle.vx,
                     y: particle.y + particle.vy,
                     vx: particle.vx * drag,
-                    vy: particle.vy * drag + gravity,
+                    vy: (particle.vy * drag + gravity) + bounce,
                     rotation: particle.rotation + particle.rotationSpeed,
                     life: Math.max(0, 1 - lifeFade),
                     size:
                       particle.type === "dust"
-                        ? particle.size * (1 + progress * 2) // Dust expands
-                        : particle.size * (1 - progress * 0.3), // Others shrink slightly
+                        ? particle.size * (1 + progress * 1.5) // Dust expands
+                        : particle.type === "brick"
+                        ? particle.size * (1 - progress * 0.2) // Bricks shrink less
+                        : particle.size * (1 - progress * 0.4), // Fragments shrink more
                   }
                 }),
               }
@@ -1630,7 +1648,8 @@ export default function TetrisComponent() {
         ctx.globalAlpha = particle.life
 
         if (particle.type === "dust") {
-          // Draw dust as colorful expanding cloud
+          // Draw dust as subtle powder cloud
+          ctx.globalAlpha = particle.life * 0.6
           const rgb = hexToRgb(particle.color)
           const dustGradient = ctx.createRadialGradient(
             particle.x,
@@ -1641,34 +1660,70 @@ export default function TetrisComponent() {
             particle.size,
           )
           if (rgb) {
-            dustGradient.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${particle.life * 0.4})`)
-            dustGradient.addColorStop(0.5, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${particle.life * 0.2})`)
+            dustGradient.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.3)`)
+            dustGradient.addColorStop(0.7, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.1)`)
             dustGradient.addColorStop(1, "transparent")
           }
           ctx.fillStyle = dustGradient
           ctx.fillRect(particle.x - particle.size, particle.y - particle.size, particle.size * 2, particle.size * 2)
         } else if (particle.type === "brick") {
-          // Draw brick fragments with rotation
+          // Draw realistic brick fragments with 3D effect and motion blur
           ctx.translate(particle.x, particle.y)
           ctx.rotate(particle.rotation)
-          // Draw a small 3D brick fragment
+          
+          // Add motion blur effect for fast-moving pieces
+          const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy)
+          if (speed > 5) {
+            ctx.globalAlpha = particle.life * 0.7
+            const blurScale = 1 + speed / 20
+            ctx.scale(blurScale, 1)
+          }
+          
+          // Draw the brick fragment with proper shading
           const fragmentSize = particle.size
-          draw3DBrick(ctx, -fragmentSize / 2, -fragmentSize / 2, fragmentSize, fragmentSize, particle.color)
-          ctx.rotate(-particle.rotation)
-          ctx.translate(-particle.x, -particle.y)
+          const depth = fragmentSize / 8
+          
+          // Main face
+          ctx.fillStyle = particle.color
+          ctx.fillRect(-fragmentSize / 2, -fragmentSize / 2, fragmentSize, fragmentSize)
+          
+          // Top edge (lighter)
+          ctx.fillStyle = adjustBrightness(particle.color, 40)
+          ctx.fillRect(-fragmentSize / 2, -fragmentSize / 2, fragmentSize, depth)
+          
+          // Right edge (darker)
+          ctx.fillStyle = adjustBrightness(particle.color, -30)
+          ctx.fillRect(fragmentSize / 2 - depth, -fragmentSize / 2, depth, fragmentSize)
+          
+          // Add crack/damage effect
+          ctx.strokeStyle = adjustBrightness(particle.color, -50)
+          ctx.lineWidth = 1
+          ctx.beginPath()
+          ctx.moveTo(-fragmentSize / 4, -fragmentSize / 3)
+          ctx.lineTo(fragmentSize / 4, fragmentSize / 3)
+          ctx.stroke()
+          
+          ctx.setTransform(1, 0, 0, 1, 0, 0) // Reset transform
         } else {
-          // Draw small fragments
+          // Draw smaller debris fragments
           ctx.translate(particle.x, particle.y)
           ctx.rotate(particle.rotation)
-          // Fragment with some shading
+          
           const halfSize = particle.size / 2
+          
+          // Main fragment
           ctx.fillStyle = particle.color
           ctx.fillRect(-halfSize, -halfSize, particle.size, particle.size)
-          // Add slight highlight
-          ctx.fillStyle = `rgba(255, 255, 255, ${particle.life * 0.3})`
-          ctx.fillRect(-halfSize, -halfSize, particle.size * 0.3, particle.size * 0.3)
-          ctx.rotate(-particle.rotation)
-          ctx.translate(-particle.x, -particle.y)
+          
+          // Add dimension with shadow
+          ctx.fillStyle = adjustBrightness(particle.color, -40)
+          ctx.fillRect(-halfSize + particle.size * 0.7, -halfSize + particle.size * 0.7, particle.size * 0.3, particle.size * 0.3)
+          
+          // Small highlight
+          ctx.fillStyle = adjustBrightness(particle.color, 30)
+          ctx.fillRect(-halfSize, -halfSize, particle.size * 0.2, particle.size * 0.2)
+          
+          ctx.setTransform(1, 0, 0, 1, 0, 0) // Reset transform
         }
 
         ctx.restore()
