@@ -570,7 +570,22 @@ const SKINS: { [key: string]: TetrisSkin } = {
 }
 
 const BOARD_HEIGHT = 28 // Changed from 20 to make the box 8 bricks higher
-const CELL_SIZE = 28
+const BASE_CELL_SIZE = 28
+
+// Calculate cell size based on board width
+const getCellSize = (boardWidth: number) => {
+  switch (boardWidth) {
+    case 8:
+      return BASE_CELL_SIZE * 1.5  // 50% wider = 42px
+    case 10:
+      return BASE_CELL_SIZE * 1.4  // 40% wider = 39.2px
+    case 12:
+      return BASE_CELL_SIZE * 1.3  // 30% wider = 36.4px
+    case 16:
+    default:
+      return BASE_CELL_SIZE        // Normal size = 28px
+  }
+}
 
 // Color schemes for Block Blast progression
 const BLOCK_BLAST_COLOR_SCHEMES = [
@@ -659,6 +674,9 @@ export default function TetrisComponent() {
 
   const skin = SKINS[currentSkin]
   const { vibrate, saveHighScore, getHighScore, share, incrementGamesPlayed } = useNativeFeatures()
+  
+  // Calculate cell size based on board width
+  const cellSize = boardWidth ? getCellSize(boardWidth) : BASE_CELL_SIZE
 
   const createNewPiece = useCallback(() => {
     if (!boardWidth) return null
@@ -726,14 +744,14 @@ export default function TetrisComponent() {
     const particles: Particle[] = []
     for (let x = 0; x < boardWidth; x++) {
       const color = colors[x] || "#ffffff"
-      const cellX = x * CELL_SIZE
-      const cellY = row * CELL_SIZE
+      const cellX = x * cellSize
+      const cellY = row * cellSize
 
       // Create brick fragments (larger pieces)
       for (let i = 0; i < 4; i++) {
         particles.push({
-          x: cellX + Math.random() * CELL_SIZE,
-          y: cellY + Math.random() * CELL_SIZE,
+          x: cellX + Math.random() * cellSize,
+          y: cellY + Math.random() * cellSize,
           vx: (Math.random() - 0.5) * 6,
           vy: -Math.random() * 8 - 2,
           life: 1,
@@ -748,8 +766,8 @@ export default function TetrisComponent() {
       // Create smaller fragments
       for (let i = 0; i < 8; i++) {
         particles.push({
-          x: cellX + Math.random() * CELL_SIZE,
-          y: cellY + Math.random() * CELL_SIZE,
+          x: cellX + Math.random() * cellSize,
+          y: cellY + Math.random() * cellSize,
           vx: (Math.random() - 0.5) * 10,
           vy: -Math.random() * 6 - 1,
           life: 1,
@@ -764,8 +782,8 @@ export default function TetrisComponent() {
       // Create dust particles with color tint
       for (let i = 0; i < 12; i++) {
         particles.push({
-          x: cellX + Math.random() * CELL_SIZE,
-          y: cellY + Math.random() * CELL_SIZE,
+          x: cellX + Math.random() * cellSize,
+          y: cellY + Math.random() * cellSize,
           vx: (Math.random() - 0.5) * 4,
           vy: -Math.random() * 3,
           life: 1,
@@ -783,7 +801,7 @@ export default function TetrisComponent() {
       particles,
       startTime: Date.now(),
     }
-  }, [boardWidth])
+  }, [boardWidth, cellSize])
 
   const clearLines = useCallback(
     (board: (string | null)[][]) => {
@@ -872,7 +890,10 @@ export default function TetrisComponent() {
           } else {
             setCurrentPiece(newPiece)
             // Remove first piece and add new one to end
-            setNextPieces((prev) => [...prev.slice(1), createNewPiece()])
+            const nextPiece = createNewPiece()
+            if (nextPiece) {
+              setNextPieces((prev) => [...prev.slice(1), nextPiece])
+            }
           }
         }
       }
@@ -1443,14 +1464,14 @@ export default function TetrisComponent() {
       ctx.lineWidth = skin.gridLineWidth
       for (let y = 0; y <= BOARD_HEIGHT; y++) {
         ctx.beginPath()
-        ctx.moveTo(0, y * CELL_SIZE)
-        ctx.lineTo(boardWidth * CELL_SIZE, y * CELL_SIZE)
+        ctx.moveTo(0, y * cellSize)
+        ctx.lineTo(boardWidth * cellSize, y * cellSize)
         ctx.stroke()
       }
       for (let x = 0; x <= boardWidth; x++) {
         ctx.beginPath()
-        ctx.moveTo(x * CELL_SIZE, 0)
-        ctx.lineTo(x * CELL_SIZE, BOARD_HEIGHT * CELL_SIZE)
+        ctx.moveTo(x * cellSize, 0)
+        ctx.lineTo(x * cellSize, BOARD_HEIGHT * cellSize)
         ctx.stroke()
       }
     }
@@ -1460,7 +1481,7 @@ export default function TetrisComponent() {
       for (let x = 0; x < boardWidth && board[y] && x < board[y].length; x++) {
         const cell = board[y][x]
         if (cell) {
-          draw3DBrick(ctx, x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, cell)
+          draw3DBrick(ctx, x * cellSize, y * cellSize, cellSize, cellSize, cell)
         }
       }
     }
@@ -1472,10 +1493,10 @@ export default function TetrisComponent() {
           if (currentPiece.shape[y][x]) {
             draw3DBrick(
               ctx,
-              (currentPiece.position.x + x) * CELL_SIZE,
-              (currentPiece.position.y + y) * CELL_SIZE,
-              CELL_SIZE,
-              CELL_SIZE,
+              (currentPiece.position.x + x) * cellSize,
+              (currentPiece.position.y + y) * cellSize,
+              cellSize,
+              cellSize,
               currentPiece.color,
             )
           }
@@ -1494,7 +1515,7 @@ export default function TetrisComponent() {
           if (currentPiece.shape[y][x]) {
             ctx.strokeStyle = currentPiece.color
             ctx.lineWidth = 2
-            ctx.strokeRect((currentPiece.position.x + x) * CELL_SIZE, (ghostY + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+            ctx.strokeRect((currentPiece.position.x + x) * cellSize, (ghostY + y) * cellSize, cellSize, cellSize)
           }
         }
       }
@@ -1572,7 +1593,7 @@ export default function TetrisComponent() {
       ctx.globalAlpha = fadeOpacity * 0.5
       ctx.fillStyle = "#ffffff"
       ctx.beginPath()
-      ctx.arc(touchFeedback.x * CELL_SIZE, touchFeedback.y * CELL_SIZE, 20, 0, Math.PI * 2)
+      ctx.arc(touchFeedback.x * cellSize, touchFeedback.y * cellSize, 20, 0, Math.PI * 2)
       ctx.fill()
       ctx.restore()
     }
@@ -1596,7 +1617,7 @@ export default function TetrisComponent() {
       ctx.textAlign = "center"
       ctx.fillText("PAUSED", canvas.width / 2, canvas.height / 2)
     }
-  }, [board, currentPiece, gameOver, isPaused, checkCollision, explosions, skin, touchFeedback, boardWidth])
+  }, [board, currentPiece, gameOver, isPaused, checkCollision, explosions, skin, touchFeedback, boardWidth, cellSize])
 
   const drawNextPiece = useCallback(
     (canvas: HTMLCanvasElement | null) => {
@@ -1853,13 +1874,13 @@ export default function TetrisComponent() {
               className="relative w-full mx-auto"
               style={{ 
                 aspectRatio: `${boardWidth}/${BOARD_HEIGHT}`,
-                maxWidth: `${(boardWidth || 16) * CELL_SIZE}px`
+                maxWidth: `${(boardWidth || 16) * cellSize}px`
               }}
             >
               <canvas
                 ref={canvasRef}
-                width={(boardWidth || 16) * CELL_SIZE}
-                height={BOARD_HEIGHT * CELL_SIZE}
+                width={(boardWidth || 16) * cellSize}
+                height={BOARD_HEIGHT * cellSize}
                 className={`w-full h-full ${
                   skin.name === "Modern"
                     ? "border-2 border-blue-500/50 rounded-lg"
