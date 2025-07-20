@@ -26,7 +26,7 @@ export default function Home() {
           <div className="text-center mb-12">
             <h1 className="text-6xl md:text-8xl font-extrabold mb-4">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-yellow-400 animate-gradient">
-                TETRIS
+                QUADRIX
               </span>
             </h1>
             <p className="text-gray-300 text-xl md:text-2xl mb-8">

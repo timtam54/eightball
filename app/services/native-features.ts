@@ -199,7 +199,7 @@ export class NativeFeatures {
   }
 
   async getAllHighScores(): Promise<Record<string, number>> {
-    const games = ['tetris', '8-ball', 'terracotta'];
+    const games = ['quadrix', '8-ball', 'terracotta'];
     const scores: Record<string, number> = {};
     
     for (const game of games) {

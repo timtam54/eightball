@@ -950,7 +950,7 @@ export default function TetrisComponent() {
             setGameOver(true)
             playSound(gameOverSoundRef) // Play game over sound
             vibrate('error')
-            saveHighScore('tetris', score)
+            saveHighScore('quadrix', score)
             incrementGamesPlayed()
           } else {
             setCurrentPiece(newPiece)
@@ -1904,7 +1904,7 @@ export default function TetrisComponent() {
         } mb-6 tracking-wider`}
         style={{ fontFamily: skin.fontFamily }}
       >
-        TETRIS
+        QUADRIX
       </h1>
 
       <div className="mb-4 flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto max-w-md">
