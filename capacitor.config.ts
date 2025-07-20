@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.onnitetrisgames.app',
-  appName: 'Onni Tetris',
+  appName: 'Quadrix',
   webDir: 'out',
   server: {
     androidScheme: 'https',
