@@ -674,6 +674,8 @@ export default function TetrisComponent() {
   
   // Audio refs
   const explosionSoundRef = useRef<HTMLAudioElement | null>(null)
+  const explosion2SoundRef = useRef<HTMLAudioElement | null>(null)
+  const explosion3SoundRef = useRef<HTMLAudioElement | null>(null)
   const bangSoundRef = useRef<HTMLAudioElement | null>(null)
   const gameOverSoundRef = useRef<HTMLAudioElement | null>(null)
   const backgroundMusicRef = useRef<HTMLAudioElement | null>(null)
@@ -689,6 +691,8 @@ export default function TetrisComponent() {
   useEffect(() => {
     // Create audio elements
     explosionSoundRef.current = new Audio('/sounds/explosion.mp3')
+    explosion2SoundRef.current = new Audio('/sounds/exp2.mp3')
+    explosion3SoundRef.current = new Audio('/sounds/exp3.mp3')
     bangSoundRef.current = new Audio('/sounds/bang.mp3')
     gameOverSoundRef.current = new Audio('/sounds/gameover.mp3')
     backgroundMusicRef.current = new Audio('/sounds/arcade-melody.mp3')
@@ -696,6 +700,8 @@ export default function TetrisComponent() {
     
     // Set volumes
     if (explosionSoundRef.current) explosionSoundRef.current.volume = 0.5
+    if (explosion2SoundRef.current) explosion2SoundRef.current.volume = 0.6
+    if (explosion3SoundRef.current) explosion3SoundRef.current.volume = 0.7
     if (bangSoundRef.current) bangSoundRef.current.volume = 0.3
     if (gameOverSoundRef.current) gameOverSoundRef.current.volume = 0.6
     if (backgroundMusicRef.current) {
@@ -706,6 +712,8 @@ export default function TetrisComponent() {
     
     // Preload sounds
     explosionSoundRef.current?.load()
+    explosion2SoundRef.current?.load()
+    explosion3SoundRef.current?.load()
     bangSoundRef.current?.load()
     gameOverSoundRef.current?.load()
     backgroundMusicRef.current?.load()
@@ -842,21 +850,7 @@ export default function TetrisComponent() {
         })
       }
 
-      // Create dust/powder effect
-      for (let i = 0; i < 8; i++) {
-        particles.push({
-          x: cellX + Math.random() * cellSize,
-          y: cellY + Math.random() * cellSize,
-          vx: (Math.random() - 0.5) * 6,
-          vy: -Math.random() * 4,
-          life: 1,
-          color: color,
-          size: Math.random() * 4 + 2,
-          rotation: 0,
-          rotationSpeed: 0,
-          type: "dust",
-        })
-      }
+      // Dust particles removed to prevent screen coverage
     }
 
     return {
@@ -888,21 +882,22 @@ export default function TetrisComponent() {
       // Create explosions for cleared lines
       if (clearedRows.length > 0) {
         setExplosions((prev) => [...prev, ...clearedRows.map(({ row, colors }) => createExplosion(row, colors))])
-        // Play explosion sound
-        playSound(explosionSoundRef)
-        // Haptic feedback based on lines cleared
+        // Play explosion sound based on lines cleared
         if (linesCleared === 1) {
+          playSound(explosionSoundRef)
           vibrate('medium')
-        } else if (linesCleared === 2 || linesCleared === 3) {
+        } else if (linesCleared === 2) {
+          playSound(explosion2SoundRef)
           vibrate('heavy')
-        } else if (linesCleared >= 4) {
+        } else if (linesCleared >= 3) {
+          playSound(explosion3SoundRef)
           vibrate('success')
         }
       }
 
       return { newBoard, linesCleared }
     },
-    [createExplosion, vibrate, boardWidth, playSound, explosionSoundRef],
+    [createExplosion, vibrate, boardWidth, playSound, explosionSoundRef, explosion2SoundRef, explosion3SoundRef],
   )
 
   const movePiece = useCallback(
@@ -1495,11 +1490,7 @@ export default function TetrisComponent() {
                   let bounce = 0
 
                   // Different physics for different particle types
-                  if (particle.type === "dust") {
-                    gravity = 0.15
-                    drag = 0.92
-                    lifeFade = progress * 2 // Dust fades faster
-                  } else if (particle.type === "brick") {
+                  if (particle.type === "brick") {
                     gravity = 1.2 // Heavier pieces fall faster
                     drag = 0.98
                     // Add slight bounce when hitting bottom
@@ -1520,9 +1511,7 @@ export default function TetrisComponent() {
                     rotation: particle.rotation + particle.rotationSpeed,
                     life: Math.max(0, 1 - lifeFade),
                     size:
-                      particle.type === "dust"
-                        ? particle.size * (1 + progress * 1.5) // Dust expands
-                        : particle.type === "brick"
+                      particle.type === "brick"
                         ? particle.size * (1 - progress * 0.2) // Bricks shrink less
                         : particle.size * (1 - progress * 0.4), // Fragments shrink more
                   }
@@ -1641,42 +1630,12 @@ export default function TetrisComponent() {
 
     // Draw explosions
     explosions.forEach((explosion) => {
-      // Helper function for hex to RGB conversion
-      const hexToRgb = (hex: string) => {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-        return result
-          ? {
-              r: Number.parseInt(result[1], 16),
-              g: Number.parseInt(result[2], 16),
-              b: Number.parseInt(result[3], 16),
-            }
-          : null
-      }
 
       explosion.particles.forEach((particle) => {
         ctx.save()
         ctx.globalAlpha = particle.life
 
-        if (particle.type === "dust") {
-          // Draw dust as subtle powder cloud
-          ctx.globalAlpha = particle.life * 0.6
-          const rgb = hexToRgb(particle.color)
-          const dustGradient = ctx.createRadialGradient(
-            particle.x,
-            particle.y,
-            0,
-            particle.x,
-            particle.y,
-            particle.size,
-          )
-          if (rgb) {
-            dustGradient.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.3)`)
-            dustGradient.addColorStop(0.7, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.1)`)
-            dustGradient.addColorStop(1, "transparent")
-          }
-          ctx.fillStyle = dustGradient
-          ctx.fillRect(particle.x - particle.size, particle.y - particle.size, particle.size * 2, particle.size * 2)
-        } else if (particle.type === "brick") {
+        if (particle.type === "brick") {
           // Draw realistic brick fragments with 3D effect and motion blur
           ctx.translate(particle.x, particle.y)
           ctx.rotate(particle.rotation)
