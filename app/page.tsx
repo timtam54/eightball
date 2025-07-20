@@ -21,7 +21,7 @@ export default function Home() {
       </div>
 
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4">
-        {/* Hero Section - Tetris */}
+        {/* Hero Section - Quadrix */}
         <section className="w-full max-w-6xl mb-20">
           <div className="text-center mb-12">
             <h1 className="text-6xl md:text-8xl font-extrabold mb-4">
@@ -34,7 +34,7 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Large Tetris Card */}
+          {/* Large Quadrix Card */}
           <Link href="/tetris" className="group relative block transform transition-all duration-300 hover:scale-[1.02] mx-auto max-w-2xl">
             <div className="relative bg-gradient-to-br from-purple-900/90 to-pink-600/90 backdrop-blur-md rounded-3xl p-12 overflow-hidden border border-purple-400/40 shadow-2xl">
               <div className="absolute inset-0 bg-gradient-to-br from-transparent to-purple-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

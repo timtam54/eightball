@@ -677,6 +677,7 @@ export default function TetrisComponent() {
   const bangSoundRef = useRef<HTMLAudioElement | null>(null)
   const gameOverSoundRef = useRef<HTMLAudioElement | null>(null)
   const backgroundMusicRef = useRef<HTMLAudioElement | null>(null)
+  const clickedSoundRef = useRef<HTMLAudioElement | null>(null)
 
   const skin = SKINS[currentSkin]
   const { vibrate, saveHighScore, getHighScore, share, incrementGamesPlayed } = useNativeFeatures()
@@ -691,21 +692,24 @@ export default function TetrisComponent() {
     bangSoundRef.current = new Audio('/sounds/bang.mp3')
     gameOverSoundRef.current = new Audio('/sounds/gameover.mp3')
     backgroundMusicRef.current = new Audio('/sounds/arcade-melody.mp3')
+    clickedSoundRef.current = new Audio('/sounds/clicked.mp3')//Audio('/sounds/clicked.mp3')
     
     // Set volumes
     if (explosionSoundRef.current) explosionSoundRef.current.volume = 0.5
     if (bangSoundRef.current) bangSoundRef.current.volume = 0.3
     if (gameOverSoundRef.current) gameOverSoundRef.current.volume = 0.6
     if (backgroundMusicRef.current) {
-      backgroundMusicRef.current.volume = 0.4
+      backgroundMusicRef.current.volume = 0.2
       backgroundMusicRef.current.loop = true // Enable looping
     }
+    if (clickedSoundRef.current) clickedSoundRef.current.volume = 1
     
     // Preload sounds
     explosionSoundRef.current?.load()
     bangSoundRef.current?.load()
     gameOverSoundRef.current?.load()
     backgroundMusicRef.current?.load()
+    clickedSoundRef.current?.load()
     
     // Cleanup function to stop music when component unmounts
     return () => {
@@ -913,6 +917,9 @@ export default function TetrisComponent() {
             y: currentPiece.position.y + dy,
           },
         })
+        // Play clicked sound when piece moves in any direction
+        
+        //alert('play clicked')
       } else if (dy > 0) {
         // Piece has landed
         playSound(bangSoundRef) // Play bang sound when piece lands
@@ -981,6 +988,7 @@ export default function TetrisComponent() {
       playSound,
       bangSoundRef,
       gameOverSoundRef,
+      clickedSoundRef,
     ],
   )
 
@@ -992,9 +1000,10 @@ export default function TetrisComponent() {
 
     if (!checkCollision(rotatedPiece, board)) {
       setCurrentPiece(rotatedPiece)
+      playSound(clickedSoundRef)
       vibrate('light')
     }
-  }, [currentPiece, board, gameOver, isPaused, checkCollision, rotatePiece, vibrate])
+  }, [currentPiece, board, gameOver, isPaused, checkCollision, rotatePiece, vibrate, playSound, clickedSoundRef])
 
   const hardDrop = useCallback(() => {
     if (!currentPiece || gameOver || isPaused) return
@@ -1045,6 +1054,7 @@ export default function TetrisComponent() {
           setIsPaused((prev) => !prev)
           break
       }
+      playSound(clickedSoundRef)
     }
 
     window.addEventListener("keydown", handleKeyPress)
@@ -1125,7 +1135,7 @@ export default function TetrisComponent() {
           vibrate('light')
         }
       }
-
+      playSound(clickedSoundRef)
       // Show touch feedback at the end position
       const rect = canvas.getBoundingClientRect()
       const x = ((touchEndX - rect.left) / rect.width) * (boardWidth || 16)
@@ -2104,7 +2114,7 @@ export default function TetrisComponent() {
               <>
                 <button onClick={resetGame} className={`${skin.buttonStyle} w-full mb-2`}>
                   {skin.name === "Modern" ? "New Game" : "NEW GAME"}
-                </button>
+                </button>Quadrix
                 <button onClick={() => share('Tetris', score)} className={`${skin.buttonStyle} w-full mb-2`}>
                   {skin.name === "Modern" ? "Share Score" : "SHARE SCORE"}
                 </button>

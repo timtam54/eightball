@@ -148,7 +148,7 @@ export class NativeFeatures {
         try {
           await navigator.share({
             title: `Onni Games - ${gameName}`,
-            text: score ? `I scored ${score} points in ${gameName}!` : `Check out ${gameName} on Tetris Games!`,
+            text: score ? `I scored ${score} points in ${gameName}!` : `Check out ${gameName} on Quadrix Games!`,
             url: window.location.href
           });
         } catch (error) {
@@ -161,7 +161,7 @@ export class NativeFeatures {
     try {
       await Share.share({
         title: `OnniTetris Games - ${gameName}`,
-        text: score ? `I scored ${score} points in ${gameName}!` : `Check out ${gameName} on Tetris Games!`,
+        text: score ? `I scored ${score} points in ${gameName}!` : `Check out ${gameName} on Quadrix Games!`,
         url: 'https://eightballgames.app',
         dialogTitle: 'Share your achievement'
       });

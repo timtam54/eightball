@@ -1,7 +1,7 @@
 {
-  "name": "Onni Tetris Games Collection",
+  "name": "Quadrix Games Collection",
   "short_name": "OnniTetris",
-  "description": "A collection of classic games including Tetris and more",
+  "description": "A collection of classic games including Quadrix and more",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",
@@ -33,7 +33,7 @@
       "src": "/screenshot-2.png",
       "sizes": "540x720",
       "type": "image/png",
-      "label": "Tetris gameplay"
+      "label": "Quadrix gameplay"
     }
   ]
 }

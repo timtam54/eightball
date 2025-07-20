@@ -14,13 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Onni Tetris Games",
-  description: "A collection of classic games including Tetris and more",
+  title: "Quadrix Games",
+  description: "A collection of classic games including Quadrix and more",
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Onni Tetris Games',
+    title: 'Quadrix Games',
   },
   icons: {
     icon: [

@@ -10,7 +10,7 @@ export default function HighScores() {
   }
 
   const gameNames: Record<string, string> = {
-    'tetris': 'Tetris',
+    'tetris': 'Quadrix',
     '8-ball': '8-Ball Pool',
     'terracotta': 'Terracotta Breaker'
   }
