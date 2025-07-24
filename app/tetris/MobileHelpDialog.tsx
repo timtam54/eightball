@@ -104,7 +104,7 @@ export default function MobileHelpDialog({ isOpen, onClose, skin }: MobileHelpDi
               </div>
               <div>
                 <h4 className="font-semibold">Swipe Up</h4>
-                <p className="text-sm opacity-80">Hard drop (instant drop)</p>
+                <p className="text-sm opacity-80">Rotate piece</p>
               </div>
             </div>
 

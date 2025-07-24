@@ -1133,9 +1133,9 @@ export default function TetrisComponent() {
       } else if (!isSwiping && deltaTime < SWIPE_TIME_THRESHOLD) {
         // Check for swipe up (wasn't handled in move)
         if (deltaY < -SWIPE_THRESHOLD && absY > absX) {
-          // Swipe up - hard drop
-          hardDrop()
-          vibrate('medium')
+          // Swipe up - rotate
+          rotate()
+          vibrate('light')
           playSound(clickedSoundRef)
         }
       }
