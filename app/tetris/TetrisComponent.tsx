@@ -678,7 +678,6 @@ export default function TetrisComponent() {
   const explosion3SoundRef = useRef<HTMLAudioElement | null>(null)
   const bangSoundRef = useRef<HTMLAudioElement | null>(null)
   const gameOverSoundRef = useRef<HTMLAudioElement | null>(null)
-  const backgroundMusicRef = useRef<HTMLAudioElement | null>(null)
   const clickedSoundRef = useRef<HTMLAudioElement | null>(null)
 
   const skin = SKINS[currentSkin]
@@ -691,11 +690,10 @@ export default function TetrisComponent() {
   useEffect(() => {
     // Create audio elements
     explosionSoundRef.current = new Audio('/sounds/explosion.mp3')
-    explosion2SoundRef.current = new Audio('/sounds/exp2.mp3')
-    explosion3SoundRef.current = new Audio('/sounds/exp3.mp3')
+    explosion2SoundRef.current = new Audio('/sounds/explosion2.mp3')
+    explosion3SoundRef.current = new Audio('/sounds/explosion3.mp3')
     bangSoundRef.current = new Audio('/sounds/bang.mp3')
     gameOverSoundRef.current = new Audio('/sounds/gameover.mp3')
-    backgroundMusicRef.current = new Audio('/sounds/arcade-melody.mp3')
     clickedSoundRef.current = new Audio('/sounds/clicked.mp3')//Audio('/sounds/clicked.mp3')
     
     // Set volumes
@@ -704,10 +702,6 @@ export default function TetrisComponent() {
     if (explosion3SoundRef.current) explosion3SoundRef.current.volume = 0.7
     if (bangSoundRef.current) bangSoundRef.current.volume = 0.3
     if (gameOverSoundRef.current) gameOverSoundRef.current.volume = 0.6
-    if (backgroundMusicRef.current) {
-      backgroundMusicRef.current.volume = 0.2
-      backgroundMusicRef.current.loop = true // Enable looping
-    }
     if (clickedSoundRef.current) clickedSoundRef.current.volume = 1
     
     // Preload sounds
@@ -716,16 +710,8 @@ export default function TetrisComponent() {
     explosion3SoundRef.current?.load()
     bangSoundRef.current?.load()
     gameOverSoundRef.current?.load()
-    backgroundMusicRef.current?.load()
     clickedSoundRef.current?.load()
     
-    // Cleanup function to stop music when component unmounts
-    return () => {
-      if (backgroundMusicRef.current) {
-        backgroundMusicRef.current.pause()
-        backgroundMusicRef.current.currentTime = 0
-      }
-    }
   }, [])
 
   // Sound helper functions
@@ -1064,8 +1050,10 @@ export default function TetrisComponent() {
     let touchStartX = 0
     let touchStartY = 0
     let touchStartTime = 0
-    const SWIPE_THRESHOLD = 10 // pixels - reduced from 30 for more sensitivity
-    const SWIPE_TIME_THRESHOLD = 500 // milliseconds - increased from 300 for easier swipes
+    let isSwiping = false
+    const SWIPE_THRESHOLD = 30 // pixels - minimum distance for a swipe
+    const TAP_THRESHOLD = 10 // pixels - maximum movement for a tap
+    const SWIPE_TIME_THRESHOLD = 300 // milliseconds - maximum time for a swipe
 
     const handleTouchStart = (e: TouchEvent) => {
       e.preventDefault()
@@ -1075,10 +1063,50 @@ export default function TetrisComponent() {
       touchStartX = touch.clientX
       touchStartY = touch.clientY
       touchStartTime = Date.now()
+      isSwiping = false
     }
 
     const handleTouchMove = (e: TouchEvent) => {
       e.preventDefault() // Prevent scrolling while playing
+      if (gameOver || isPaused || isSwiping) return
+
+      const touch = e.touches[0]
+      const currentX = touch.clientX
+      const currentY = touch.clientY
+      
+      const deltaX = currentX - touchStartX
+      const deltaY = currentY - touchStartY
+      const absX = Math.abs(deltaX)
+      const absY = Math.abs(deltaY)
+
+      // Check if we've moved enough to trigger a swipe
+      if (absX > SWIPE_THRESHOLD || absY > SWIPE_THRESHOLD) {
+        isSwiping = true
+        
+        if (absX > absY) {
+          // Horizontal swipe
+          if (deltaX > SWIPE_THRESHOLD) {
+            // Swipe right
+            movePiece(1, 0)
+            touchStartX = currentX // Reset for continuous swiping
+            vibrate('light')
+          } else if (deltaX < -SWIPE_THRESHOLD) {
+            // Swipe left
+            movePiece(-1, 0)
+            touchStartX = currentX // Reset for continuous swiping
+            vibrate('light')
+          }
+        } else {
+          // Vertical swipe
+          if (deltaY > SWIPE_THRESHOLD) {
+            // Swipe down - soft drop
+            movePiece(0, 1)
+            touchStartY = currentY // Reset for continuous swiping
+            vibrate('light')
+          }
+        }
+        playSound(clickedSoundRef)
+      }
     }
 
     const handleTouchEnd = (e: TouchEvent) => {
@@ -1093,44 +1121,25 @@ export default function TetrisComponent() {
       const deltaX = touchEndX - touchStartX
       const deltaY = touchEndY - touchStartY
       const deltaTime = touchEndTime - touchStartTime
-
-      // Only process if the touch was quick enough (not a long press)
-      if (deltaTime > SWIPE_TIME_THRESHOLD) {
-        return
-      }
-
       const absX = Math.abs(deltaX)
       const absY = Math.abs(deltaY)
 
-      // Determine if it's a swipe or a tap
-      if (absX < SWIPE_THRESHOLD && absY < SWIPE_THRESHOLD) {
+      // If we haven't swiped and it's a quick tap
+      if (!isSwiping && absX < TAP_THRESHOLD && absY < TAP_THRESHOLD && deltaTime < SWIPE_TIME_THRESHOLD) {
         // It's a tap - rotate the piece
         rotate()
         vibrate('light')
-      } else if (absX > absY) {
-        // Horizontal swipe
-        if (deltaX > SWIPE_THRESHOLD) {
-          // Swipe right
-          movePiece(1, 0)
-          vibrate('light')
-        } else if (deltaX < -SWIPE_THRESHOLD) {
-          // Swipe left
-          movePiece(-1, 0)
-          vibrate('light')
-        }
-      } else {
-        // Vertical swipe
-        if (deltaY > SWIPE_THRESHOLD) {
-          // Swipe down - soft drop
-          movePiece(0, 1)
-          vibrate('light')
-        } else if (deltaY < -SWIPE_THRESHOLD) {
-          // Swipe up - rotate
-          rotate()
-          vibrate('light')
+        playSound(clickedSoundRef)
+      } else if (!isSwiping && deltaTime < SWIPE_TIME_THRESHOLD) {
+        // Check for swipe up (wasn't handled in move)
+        if (deltaY < -SWIPE_THRESHOLD && absY > absX) {
+          // Swipe up - hard drop
+          hardDrop()
+          vibrate('medium')
+          playSound(clickedSoundRef)
         }
       }
-      playSound(clickedSoundRef)
+      
       // Show touch feedback at the end position
       const rect = canvas.getBoundingClientRect()
       const x = ((touchEndX - rect.left) / rect.width) * (boardWidth || 16)
@@ -1148,7 +1157,7 @@ export default function TetrisComponent() {
       canvas.removeEventListener("touchmove", handleTouchMove)
       canvas.removeEventListener("touchend", handleTouchEnd)
     }
-  }, [currentPiece, gameOver, isPaused, movePiece, rotate, vibrate])
+  }, [currentPiece, gameOver, isPaused, movePiece, rotate, hardDrop, vibrate, playSound, clickedSoundRef, boardWidth])
 
   // Game loop
   useEffect(() => {
@@ -1174,18 +1183,6 @@ export default function TetrisComponent() {
     setLevel(Math.floor(lines / 10) + 1)
   }, [lines])
 
-  // Handle background music pause/resume
-  useEffect(() => {
-    if (backgroundMusicRef.current) {
-      if (isPaused || gameOver) {
-        backgroundMusicRef.current.pause()
-      } else if (boardWidth && !isPaused && !gameOver) {
-        backgroundMusicRef.current.play().catch(e => {
-          console.log('Background music resume blocked:', e)
-        })
-      }
-    }
-  }, [isPaused, gameOver, boardWidth])
 
   // Initialize game when board width is selected
   useEffect(() => {
@@ -1196,12 +1193,6 @@ export default function TetrisComponent() {
       const firstPiece = createNewPiece()
       if (firstPiece) setCurrentPiece(firstPiece)
       
-      // Start background music
-      if (backgroundMusicRef.current) {
-        backgroundMusicRef.current.play().catch(e => {
-          console.log('Background music autoplay blocked:', e)
-        })
-      }
     }
   }, [boardWidth, createNewPiece])
 
@@ -1242,13 +1233,6 @@ export default function TetrisComponent() {
     const firstPiece = createNewPiece()
     if (firstPiece) setCurrentPiece(firstPiece)
     
-    // Restart background music
-    if (backgroundMusicRef.current) {
-      backgroundMusicRef.current.currentTime = 0
-      backgroundMusicRef.current.play().catch(e => {
-        console.log('Background music restart blocked:', e)
-      })
-    }
   }
 
   const draw3DBrick = (
