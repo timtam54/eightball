@@ -1051,7 +1051,7 @@ export default function TetrisComponent() {
     let touchStartY = 0
     let touchStartTime = 0
     let isSwiping = false
-    const SWIPE_THRESHOLD = 30 // pixels - minimum distance for a swipe
+    const SWIPE_THRESHOLD = 15 // pixels - minimum distance for a swipe (reduced for more sensitivity)
     const TAP_THRESHOLD = 10 // pixels - maximum movement for a tap
     const SWIPE_TIME_THRESHOLD = 300 // milliseconds - maximum time for a swipe
 
@@ -1161,9 +1161,9 @@ export default function TetrisComponent() {
 
   // Game loop
   useEffect(() => {
-    // Halved the interval for more continuous movement
-    const baseInterval = 1000 - (level - 1) * 100
-    const dropInterval = Math.max(32, baseInterval * 0.10) // Halved from 0.64 to 0.32
+    // Slowed down by 20% for easier gameplay
+    const baseInterval = 1200 - (level - 1) * 100 // Increased from 1000 to 1200 (20% slower)
+    const dropInterval = Math.max(40, baseInterval * 0.10) // Increased from 32 to 40 (20% slower)
 
     gameLoopRef.current = window.setInterval(() => {
       if (!isPaused && !gameOver) {
