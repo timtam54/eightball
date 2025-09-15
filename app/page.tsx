@@ -138,6 +138,40 @@ export default function Home() {
                 </div>
               </div>
             </Link>
+
+            {/* Tetris 3D Card */}
+            <Link href="/tetris3js" className="group relative transform transition-all duration-300 hover:scale-105">
+              <div className="relative bg-gradient-to-br from-purple-900/70 to-cyan-600/70 backdrop-blur-md rounded-xl p-6 overflow-hidden border border-cyan-400/20 shadow-xl">
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-purple-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                <div className="relative z-10 flex items-center gap-4">
+                  <div className="relative flex-shrink-0">
+                    <div className="w-16 h-16 grid grid-cols-4 grid-rows-4 gap-0.5">
+                      <div className="bg-cyan-500 rounded-sm col-span-4"></div>
+                      <div className="bg-transparent col-span-4"></div>
+                      <div className="bg-purple-500 rounded-sm"></div>
+                      <div className="bg-purple-500 rounded-sm"></div>
+                      <div className="bg-purple-500 rounded-sm"></div>
+                      <div className="bg-transparent"></div>
+                      <div className="bg-transparent"></div>
+                      <div className="bg-purple-500 rounded-sm"></div>
+                      <div className="bg-transparent"></div>
+                      <div className="bg-transparent"></div>
+                    </div>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-400 to-cyan-400 rounded blur opacity-40 group-hover:opacity-60 transition-opacity"></div>
+                  </div>
+                  
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-white mb-1">Tetris 3D</h3>
+                    <p className="text-gray-300 text-sm">
+                      Three.js powered Tetris
+                    </p>
+                  </div>
+                  
+                  <span className="text-cyan-300 text-xl">→</span>
+                </div>
+              </div>
+            </Link>
           </div>
         </section>
 
